@@ -211,7 +211,6 @@ int Internal::cdcl_loop_with_inprocessing () {
               {
                 lim.dump = stats.conflicts + opts.dumpfreq;
                 dump (); // based on whether dump_dir is set, prints to stdout or file dump_{dump_count}.cnf
-                dump_count++;
               }
           }
         res = decide ();
@@ -639,18 +638,27 @@ void Internal::print_stats () {
 
 void Internal::dump () {
   int64_t m = assumptions.size ();
+  int64_t m_irr = assumptions.size();
   for (int idx = 1; idx <= max_var; idx++)
-    if (fixed (idx)) m++;
+    if (fixed (idx)) {m++; m_irr++;};
   for (const auto & c : clauses)
-    if (!c->garbage) m++;
+    if (!c->garbage)
+      {
+        m++;
+        if (!c->redundant)
+          {
+            m_irr++;
+          }
+      };
 
+  int64_t CLAUSE_LIMIT = 8e6;
+
+  if (m_irr > CLAUSE_LIMIT) return;
   FILE * dump_file = stdout;
   if (dump_dir_set_flag)
   {
-    // auto dump_path  = std::format("{}/dump_{}.cnf", dump_dir, dump_count);
     char dump_path[255];
     std::sprintf(dump_path, "%sdump_%lu.cnf", dump_dir, dump_count);
-    // std::cout << dump_path << "\n";
 
     dump_file = fopen(dump_path, "wb");
   }
@@ -660,12 +668,18 @@ void Internal::dump () {
     const int tmp = fixed (idx);
     if (tmp) fprintf (dump_file, "%d 0\n", tmp < 0 ? -idx : idx);
   }
+  int64_t push_count = 0;
   for (const auto & c : clauses)
-    if (!c->garbage) dump_clause (c, dump_file);
+    {
+      if (push_count > CLAUSE_LIMIT) break;
+      if (!c->garbage) dump_clause (c, dump_file);
+      push_count++;
+    }
   for (const auto & lit : assumptions)
     printf ("%d 0\n", lit);
   fflush (dump_file);
   if (dump_dir_set_flag) fclose(dump_file);
+  dump_count++;  
 }
 
 /*------------------------------------------------------------------------*/
