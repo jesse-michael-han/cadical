@@ -123,14 +123,18 @@ struct Internal {
   };
 
   int mode;
+  const char* dump_dir = 0;
+  bool dump_dir_set_flag = false;
 
   bool in_mode (Mode m) const { return (mode & m) != 0; }
   void set_mode (Mode m) { assert (!(mode & m)); mode |= m; }
   void reset_mode (Mode m) { assert (mode & m); mode &= ~m; }
   void require_mode (Mode m) const { assert (mode & m), (void) m; }
+  void set_dump_dir (const char * arg) { dump_dir = arg; dump_dir_set_flag = true;}
 
   /*----------------------------------------------------------------------*/
 
+  int64_t dump_count;           // number of dumped intermediate CNFs
   bool unsat;                   // empty clause found or learned
   bool iterating;               // report learned unit ('i' line)
   bool localsearching;          // true during local search
@@ -1043,7 +1047,7 @@ struct Internal {
 
   // Dump to '<stdout>' as DIMACS for debugging.
   //
-  void dump (Clause *);
+  void dump_clause (Clause *, FILE *);
   void dump ();
 
   // Export and traverse all irredundant (non-unit) clauses.

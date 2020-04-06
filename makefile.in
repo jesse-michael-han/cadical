@@ -35,7 +35,7 @@ all: libcadical.a cadical mobical
 .SUFFIXES: .cpp .o
 
 %.o: ../src/%.cpp ../src/*.hpp makefile
-	$(COMPILE) -c $<
+	    $(COMPILE) -c $<
 
 #--------------------------------------------------------------------------#
 

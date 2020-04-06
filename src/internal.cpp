@@ -1,3 +1,5 @@
+#include <iostream>
+#include <string>
 #include "internal.hpp"
 
 namespace CaDiCaL {
@@ -7,6 +9,7 @@ namespace CaDiCaL {
 Internal::Internal ()
 :
   mode (SEARCH),
+  dump_count (0),  
   unsat (false),
   iterating (false),
   localsearching (false),
@@ -200,7 +203,19 @@ int Internal::cdcl_loop_with_inprocessing () {
     else if (eliminating ()) elim ();        // variable elimination
     else if (compacting ()) compact ();      // collect variables
     else if (conditioning ()) condition ();  // globally blocked clauses
-    else res = decide ();                    // next decision
+    else
+      {
+        if (opts.dump)
+          {
+            if (stats.conflicts > lim.dump)
+              {
+                lim.dump = stats.conflicts + opts.dumpfreq;
+                dump (); // based on whether dump_dir is set, prints to stdout or file dump_{dump_count}.cnf
+                dump_count++;
+              }
+          }
+        res = decide ();
+          };                    // next decision
   }
 
   if (stable) { STOP (stable);   report (']'); }
@@ -615,10 +630,11 @@ void Internal::print_stats () {
 
 // Only useful for debugging purposes.
 
-void Internal::dump (Clause * c) {
-  for (const auto & lit : *c)
-    printf ("%d ", lit);
-  printf ("0\n");
+  void Internal::dump_clause (Clause * c, FILE * out) {
+  // if (c -> redundant)
+    {for (const auto & lit : *c)
+        fprintf (out, "%d ", lit);
+      fprintf (out, "0\n");}
 }
 
 void Internal::dump () {
@@ -627,16 +643,29 @@ void Internal::dump () {
     if (fixed (idx)) m++;
   for (const auto & c : clauses)
     if (!c->garbage) m++;
-  printf ("p cnf %d %" PRId64 "\n", max_var, m);
+
+  FILE * dump_file = stdout;
+  if (dump_dir_set_flag)
+  {
+    // auto dump_path  = std::format("{}/dump_{}.cnf", dump_dir, dump_count);
+    char dump_path[255];
+    std::sprintf(dump_path, "%sdump_%lu.cnf", dump_dir, dump_count);
+    // std::cout << dump_path << "\n";
+
+    dump_file = fopen(dump_path, "wb");
+  }
+  
+  fprintf (dump_file, "p cnf %d %" PRId64 "\n", max_var, m);
   for (int idx = 1; idx <= max_var; idx++) {
     const int tmp = fixed (idx);
-    if (tmp) printf ("%d 0\n", tmp < 0 ? -idx : idx);
+    if (tmp) fprintf (dump_file, "%d 0\n", tmp < 0 ? -idx : idx);
   }
   for (const auto & c : clauses)
-    if (!c->garbage) dump (c);
+    if (!c->garbage) dump_clause (c, dump_file);
   for (const auto & lit : assumptions)
     printf ("%d 0\n", lit);
-  fflush (stdout);
+  fflush (dump_file);
+  if (dump_dir_set_flag) fclose(dump_file);
 }
 
 /*------------------------------------------------------------------------*/

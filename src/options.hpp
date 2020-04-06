@@ -60,6 +60,8 @@ OPTION( coverreleff,       4,  1,1e5, 1, "relative efficiency per mille") \
 OPTION( decompose,         1,  0,  1, 0, "decompose BIG in SCCs and ELS") \
 OPTION( decomposerounds,   2,  1, 16, 1, "number of decompose rounds") \
 OPTION( deduplicate,       1,  0,  1, 0, "remove duplicated binary clauses") \
+OPTION( dump,             0,  0,  1, 0, "dump intermediate CNFs") \
+OPTION( dumpfreq,        250e3,  0,  2e9, 0, "dump frequency in conflicts") \
 OPTION( eagersubsume,      1,  0,  1, 0, "subsume eagerly recently learned") \
 OPTION( eagersubsumelim,  20,  1,1e3, 0, "limit on subsumed candidates") \
 OPTION( elim,              1,  0,  1, 0, "bounded variable elimination") \
