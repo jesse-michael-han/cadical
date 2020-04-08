@@ -20,6 +20,7 @@ struct Limit {
   int64_t reduce;          // conflict limit for next 'reduce'
   int64_t rephase;         // conflict limit for next 'rephase'
   int64_t dump;            // conflict limit for next CNF dump
+  int64_t query;           // conflict limit for next refocus query
   int64_t report;          // report limit for header
   int64_t restart;         // conflict limit for next 'restart'
   int64_t stabilize;       // conflict limit for next 'stabilize'

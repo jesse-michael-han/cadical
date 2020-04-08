@@ -24,7 +24,8 @@ SRC=$(filter %.cpp,$(subst ../src/,,$(ALL)))
 LIB=$(filter-out $(APP),$(SRC))
 OBJ=$(LIB:.cpp=.o)
 DIR=../$(shell pwd|sed -e 's,.*/,,')
-COMPILE=$(CXX) $(CXXFLAGS) -I$(DIR)
+TORCH_LIBRARIES=$HOME/Downloads/libtorch/share/cmake/
+COMPILE=$(CXX) $(CXXFLAGS) -I$(DIR) -I$(TORCH_LIBRARIES)
 
 #--------------------------------------------------------------------------#
 
@@ -42,8 +43,8 @@ all: libcadical.a cadical mobical
 # Application binaries (the stand alone solver 'cadical' and the model based
 # tester 'mobical') and the library are the main build targets.
 
-cadical: cadical.o libcadical.a makefile
-	$(COMPILE) -o $@ $< -L. -lcadical
+cadical: cadical.o libcadical.a libtorch.so makefile
+	$(COMPILE) -o $@ $< -L. -lcadical -ltorch
 
 mobical: mobical.o libcadical.a makefile
 	$(COMPILE) -o $@ $< -L. -lcadical

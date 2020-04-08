@@ -2,6 +2,7 @@
 
 namespace CaDiCaL {
 
+
 // This initializes variables on the binary 'scores' heap also with
 // smallest variable index first (thus picked first) and larger indices at
 // the end.
@@ -12,6 +13,18 @@ void Internal::init_scores (int old_max_var, int new_max_var) {
   for (int i = old_max_var + 1; i <= new_max_var; i++)
     scores.push_back (i);
 }
+
+// Refocus the EVSIDS heap.
+void Internal::refocus_scores () {
+  auto [CL_idxs, nv_to_v] = buildCLIndices();
+  auto V_logits = gnn1(CL_idxs);
+  auto V_probs = torch::softmax(V_logits * 4.0, 0);
+  for (unsigned v_idx = 0; v_idx < nv_to_v.size(); v_idx++) {
+    auto idx = nv_to_v[v_idx] + 1;
+    score (idx) = opts.refocusscale * nv_to_v.size() * V_probs[v_idx].item<double>();
+    if (scores.contains (idx)) scores.update (idx);    
+  }
+};
 
 // Shuffle the EVSIDS heap.
 

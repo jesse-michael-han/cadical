@@ -40,6 +40,7 @@ extern "C" {
 // number of header files included here.  The other benefit of having all
 // header files here is that '.cpp' files then only need to include this.
 
+#include "clindices.hpp"
 #include "arena.hpp"
 #include "averages.hpp"
 #include "bins.hpp"
@@ -134,6 +135,7 @@ struct Internal {
 
   /*----------------------------------------------------------------------*/
 
+  GNN1 gnn1;
   int64_t dump_count;           // number of dumped intermediate CNFs
   bool unsat;                   // empty clause found or learned
   bool iterating;               // report learned unit ('i' line)
@@ -547,7 +549,9 @@ struct Internal {
   char rephase_original ();
   char rephase_random ();
   char rephase_walk ();
+  std::tuple<CLIndices, std::vector<unsigned>> buildCLIndices ();
   void shuffle_scores ();
+  void refocus_scores ();
   void shuffle_queue ();
   void rephase ();
 

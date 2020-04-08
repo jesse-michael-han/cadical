@@ -1,0 +1,5 @@
+#define VERSION "dummy"
+#define IDENTIFIER "dummy"
+#define COMPILER "dummy"
+#define FLAGS "dummy"
+#define DATE "dummy"
