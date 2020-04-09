@@ -23,6 +23,7 @@ namespace CaDiCaL
     std::vector<unsigned> nv_to_v;
 
     std::vector<bool> assigned(n_vars, false);
+    std::vector<bool> assigned_polarity(n_vars, false);
 
     // int trail_limit = (trail_lim.size() == 0 ? trail.size() : trail_lim[0]);
 
@@ -32,6 +33,7 @@ namespace CaDiCaL
     for (auto l : trail) {
       // std::cout << "NEXT VARAIBLE INDEX ON TRAIL: " << var(trail[i]) << "\n";
       assigned[vidx(l)-1] = true;
+      assigned_polarity[vidx(l) - 1] = sign(l) == 1;
     }
 
     for (int v = 0; v < n_vars; v++) {
@@ -107,8 +109,9 @@ namespace CaDiCaL
                                    // push_count++;
                                    // std::cout << "PUSHED EDGE" << n_clauses << " " << (sign(lit) ? new_v_idx : (new_v_idx + new_n_vars)) << "\n" << "V_IDX : " << new_v_idx << "\n";
                                  }
-                                 else { // clause is satisfiedm skip
-                                   return;
+                                 else { // clause is possibly satisfied
+                                   auto pol = assigned_polarity[v_idx];
+                                   if (pol == (sign(lit) == 1)) return;
                                  }
 
                                }
