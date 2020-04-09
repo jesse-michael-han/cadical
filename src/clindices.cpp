@@ -2,10 +2,17 @@
 
 namespace CaDiCaL
 {
+
+  void CLIndices::dump (FILE* f)
+  {
+    for (unsigned i = 0; i < C_idxs.size(); i++) {
+      fprintf(f, "%d %d\n", C_idxs[i], L_idxs[i]);
+    }
+  };
   std::tuple<CLIndices, std::vector<unsigned>> Internal::buildCLIndices()
   {
     // simplify();
-    int n_vars = max_var;
+    int n_vars = max_var+1;
 
     unsigned n_clauses = 0;
 
@@ -40,7 +47,9 @@ namespace CaDiCaL
 
     auto CL_idxs = CLIndices();
 
-    auto new_n_vars = nv_to_v.size();
+    int new_n_vars = nv_to_v.size();
+    std::cout << "NEW N VARS " << new_n_vars << "\n";
+    std::cout << "v_to_nv " << v_to_nv << "\n";
     CL_idxs.set_n_vars(new_n_vars);
 
     int push_count = 0;
@@ -50,7 +59,7 @@ namespace CaDiCaL
     // note: for now, do not pass learned clauses to the heuristic
 
     bool SIZE_EXCEEDED = false;
-  
+
     auto traverse_clause = [&](Clause & clause) {
                              if (clause.garbage) {
                                return;
@@ -60,9 +69,9 @@ namespace CaDiCaL
                                // } else if (clause.learnt() && (unsigned) clause.size() > max_lclause_size) {
                                //   return;
                              }
-                               else if (clause.redundant && clause.size > 1000) {
+                               else if (clause.redundant && clause.size > 5000) {
                                  return;
-                               }                             
+                               }
                              // else if (clause.redundant) {
                              //   return;
                              // }
@@ -72,20 +81,38 @@ namespace CaDiCaL
                              // }
 
                              else {
-                               for (auto lit : clause) {
+                               std::vector<int> tmp_c_idx;
+                               std::vector<int> tmp_l_idx;
+                               
+                               for (const auto &lit : clause) {
+                                 
                                  auto v_idx = vidx(lit)-1;
                                  if (v_idx >= n_vars) {throw std::runtime_error("var too big");}
                                  int new_v_idx = v_to_nv[v_idx];
                                  if (new_v_idx !=  -1 && new_v_idx >= (int) new_n_vars) {
                                    std::cout << "V_IDX: " << v_idx << " NEW_V_IDX: " << new_v_idx << " NEW_N_VAR: " << new_n_vars << "\n";
                                  }
+                                 // if (n_clauses == 175) { std::cout << "V_IDX " <<  v_idx << "NEW_V_IDX " << new_v_idx << "NEW N VARS " << new_n_vars << "LIT " << lit << "\n"; }                                 
                                  if (new_v_idx != -1) {
-                                   CL_idxs.push_back(n_clauses, sign(lit) ? new_v_idx : (new_v_idx + new_n_vars) );
-                                   push_count++;
+                                   auto l_idx = (sign(lit) == 1) ? new_v_idx : (new_v_idx + new_n_vars);
+                                   tmp_c_idx.push_back(n_clauses);
+                                   tmp_l_idx.push_back(l_idx);
+                                   // CL_idxs.push_back(n_clauses,  );
+                                   // if (n_clauses == 175) { std::cout << "V_IDX " <<  v_idx << "NEW_V_IDX " << new_v_idx << "NEW N VARS " << new_n_vars << "LIT " << lit << "\n"; }                                 
+                                   // push_count++;
+                                   // std::cout << "PUSHED EDGE" << n_clauses << " " << (sign(lit) ? new_v_idx : (new_v_idx + new_n_vars)) << "\n" << "V_IDX : " << new_v_idx << "\n";
                                  }
+                                 else { // clause is satisfiedm skip
+                                   return;
+                                 }
+
                                }
 
-                               
+                               for (int i = 0; i < (int) tmp_c_idx.size(); i++) {
+                                 CL_idxs.push_back(tmp_c_idx[i], tmp_l_idx[i]);
+                                 push_count++;
+                               }                               
+
                                // for (int arg_idx = 0; arg_idx < clause.size; ++arg_idx) {
                                //   Lit lit = clause[arg_idx];
                                //   Var v_idx   = var(lit);
@@ -93,7 +120,7 @@ namespace CaDiCaL
                                //   int new_v_idx  = v_to_nv[v_idx]; // get compressed variable index
                                //   if (new_v_idx != -1 && new_v_idx >= new_n_vars) // comparisons between unsigned ints are the root of all evil
                                //     {std::cout << "V_IDX: " << v_idx << " NEW_V_IDX: " << new_v_idx << " NEW_N_VAR: " << new_n_vars << "\n";}
-                               
+
                                //   // if (new_v_idx >= new_n_vars) {throw std::runtime_error("new v_idx too big!"); }
                                //   if (new_v_idx != -1) {
                                //     CL_idxs.push_back(n_clauses, sign(lit) ? new_v_idx : (new_v_idx + new_n_vars) );
@@ -118,13 +145,13 @@ namespace CaDiCaL
     //     }
     //     c_idx ++;
     //   }
-    for (auto cls : clauses) {
+    for (const auto & cls : clauses) {
       traverse_clause(*cls); // TODO(jesse): implement cutoff limit -- assuming learned clauses are pushed back, throw a flag when a learned clause is encountered and begin counting from there
     }
 
     // auto c_idx2 = 0;
 
-    // sort(learnts, ClauseSize_lt(ca));  
+    // sort(learnts, ClauseSize_lt(ca));
 
     // while (c_idx2 < learnts.size())
     //   {
@@ -138,7 +165,7 @@ namespace CaDiCaL
     // printf("THE BIGGEST CLAUSE: %d\n", c_idx + c_idx2);
 
     CL_idxs.set_n_clauses(n_clauses);
-    return std::tuple<CLIndices, std::vector<unsigned>> {CL_idxs, nv_to_v};    
+    return std::tuple<CLIndices, std::vector<unsigned>> {CL_idxs, nv_to_v};
   }
 
   torch::Tensor GNN1::get_logits(CLIndices &CL_idxs) {

@@ -181,18 +181,6 @@ void Internal::add_original_lit (int lit) {
 
 // This is the main CDCL loop with interleaved inprocessing.
 
-bool Internal::dumping ()  {
-  if (opts.dump)
-    {
-      if (stats.conflicts > lim.dump)
-        {
-          lim.dump = stats.conflicts + opts.dumpfreq;
-          return true;
-        }
-    }
-  return false;
-}
-
   bool Internal::refocusing () {
     return opts.refocus && stats.conflicts > lim.query;
   }
@@ -632,65 +620,6 @@ int Internal::solve () {
 void Internal::print_stats () {
   stats.print (this);
   if (checker) checker->print_stats ();
-}
-
-/*------------------------------------------------------------------------*/
-
-// Only useful for debugging purposes.
-
-  void Internal::dump_clause (Clause * c, FILE * out) {
-  // if (c -> redundant)
-    {for (const auto & lit : *c)
-        fprintf (out, "%d ", lit);
-      fprintf (out, "0\n");}
-}
-
-void Internal::dump () {
-  int64_t m = assumptions.size ();
-  int64_t m_irr = assumptions.size();
-  for (int idx = 1; idx <= max_var; idx++)
-    if (fixed (idx)) {m++; m_irr++;};
-  for (const auto & c : clauses)
-    if (!c->garbage)
-      {
-        m++;
-        if (!c->redundant)
-          {
-            m_irr++;
-          }
-      };
-
-  int64_t CLAUSE_LIMIT = 5e6;
-
-  int64_t REDUNDANT_LIMIT = opts.dumplim * (m_irr + 1);
-
-  if (m_irr > CLAUSE_LIMIT) return;
-  FILE * dump_file = stdout;
-  if (dump_dir_set_flag)
-  {
-    char dump_path[255];
-    std::sprintf(dump_path, "%sdump_%lu.cnf", dump_dir, dump_count);
-
-    dump_file = fopen(dump_path, "wb");
-  }
-  
-  fprintf (dump_file, "p cnf %d %" PRId64 "\n", max_var, m);
-  for (int idx = 1; idx <= max_var; idx++) {
-    const int tmp = fixed (idx);
-    if (tmp) fprintf (dump_file, "%d 0\n", tmp < 0 ? -idx : idx);
-  }
-  int64_t push_count = 0;
-  for (const auto & c : clauses)
-    {
-      if (push_count > REDUNDANT_LIMIT) break;
-      if (!c->garbage) dump_clause (c, dump_file);
-      push_count++;
-    }
-  for (const auto & lit : assumptions)
-    printf ("%d 0\n", lit);
-  fflush (dump_file);
-  if (dump_dir_set_flag) fclose(dump_file);
-  dump_count++;  
 }
 
 /*------------------------------------------------------------------------*/

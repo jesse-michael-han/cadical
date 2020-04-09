@@ -37,13 +37,5 @@ namespace CaDiCaL
       module = torch::jit::load(MODEL_PATH);
     }
   };
-
-
-  inline void CLIndices::dump (FILE* f)
-  {
-    for (unsigned i = 0; i < C_idxs.size(); i++) {
-      fprintf(f, "%d %d\n", C_idxs[i], L_idxs[i]);
-    }
-  };      
 }
 #endif

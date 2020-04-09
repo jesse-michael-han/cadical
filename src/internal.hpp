@@ -1053,7 +1053,7 @@ struct Internal {
 
   // Dump to '<stdout>' as DIMACS for debugging.
   //
-  void dump_clause (Clause *, FILE *);
+  // void dump_clause (Clause *, FILE *);
   void dump ();
   bool dumping ();
 
