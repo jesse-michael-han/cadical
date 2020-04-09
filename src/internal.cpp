@@ -180,6 +180,18 @@ void Internal::add_original_lit (int lit) {
 
 // This is the main CDCL loop with interleaved inprocessing.
 
+bool Internal::dumping ()  {
+  if (opts.dump)
+    {
+      if (stats.conflicts > lim.dump)
+        {
+          lim.dump = stats.conflicts + opts.dumpfreq;
+          return true;
+        }
+    }
+  return false;
+}
+
 int Internal::cdcl_loop_with_inprocessing () {
 
   int res = 0;
@@ -192,6 +204,7 @@ int Internal::cdcl_loop_with_inprocessing () {
   while (!res) {
          if (unsat) res = 20;
     else if (!propagate ()) analyze ();      // propagate and analyze
+    else if (dumping ()) dump();
     else if (iterating) iterate ();          // report learned unit
     else if (satisfied ()) res = 10;         // found model
     else if (terminating ()) break;          // limit hit or async abort
@@ -204,17 +217,7 @@ int Internal::cdcl_loop_with_inprocessing () {
     else if (compacting ()) compact ();      // collect variables
     else if (conditioning ()) condition ();  // globally blocked clauses
     else
-      {
-        if (opts.dump)
-          {
-            if (stats.conflicts > lim.dump)
-              {
-                lim.dump = stats.conflicts + opts.dumpfreq;
-                dump (); // based on whether dump_dir is set, prints to stdout or file dump_{dump_count}.cnf
-              }
-          }
-        res = decide ();
-          };                    // next decision
+      { res = decide (); };                    // next decision
   }
 
   if (stable) { STOP (stable);   report (']'); }

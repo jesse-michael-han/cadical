@@ -22,12 +22,7 @@ namespace CaDiCaL
   void set_n_clauses (unsigned const &nc) {n_clauses = nc;};
   void push_back (int const &c_idx, int const &l_idx)
   { C_idxs.push_back(c_idx); L_idxs.push_back(l_idx); };
-  void dump (FILE* f = stdout)
-  {
-    for (unsigned i = 0; i < C_idxs.size(); i++) {
-      fprintf(f, "%d %d\n", C_idxs[i], L_idxs[i]);
-    }
-  };
+    void dump (FILE* f = stdout);
 };
 
   class GNN1 {

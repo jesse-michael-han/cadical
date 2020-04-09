@@ -28,7 +28,6 @@ OPTION( block,             0,  0,  1, 0, "blocked clause elimination") \
 OPTION( blockmaxclslim,  1e5,  1,2e9, 2, "maximum clause size") \
 OPTION( blockminclslim,    4,  2,2e9, 0, "minimum clause size") \
 OPTION( blockocclim,     1e2,  1,2e9, 2, "occurrence limit") \
-OPTION( branchmode,     0,  0,10, 2, "branch mode") \
 OPTION( bump,              1,  0,  1, 0, "bump variables") \
 OPTION( bumpreason,        1,  0,  1, 0, "bump reason literals too") \
 OPTION( bumpreasondepth,   1,  1,  3, 0, "bump reason depth") \
@@ -123,7 +122,8 @@ OPTION( reduceint,       300, 10,1e6, 0, "reduce interval") \
 OPTION( reducetarget,     75, 10,1e2, 0, "reduce fraction in percent") \
 OPTION( reducetier1glue,   2,  1,2e9, 0, "glue of kept learned clauses") \
 OPTION( reducetier2glue,   6,  1,2e9, 0, "glue of tier two clauses") \
-OPTION( refocusscale,   1e4,  1,1e20, 0, "periodic refocusing scale") \
+OPTION( refocus,             0,  0,  1, 0, "use periodic refocusing") \
+OPTION( refocusscale,   1e4,  1, 1e10, 0, "periodic refocusing scale") \
 OPTION( reluctant,      1024,  0,2e9, 0, "reluctant doubling period") \
 OPTION( reluctantmax,1048576,  0,2e9, 0, "reluctant doubling period") \
 OPTION( rephase,           1,  0,  1, 0, "enable resetting phase") \

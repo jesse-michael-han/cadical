@@ -1053,6 +1053,7 @@ struct Internal {
   //
   void dump_clause (Clause *, FILE *);
   void dump ();
+  bool dumping ();
 
   // Export and traverse all irredundant (non-unit) clauses.
   //

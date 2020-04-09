@@ -4,6 +4,13 @@
 
 namespace CaDiCaL
 {
+  void CLIndices::dump (FILE* f)
+  {
+    for (unsigned i = 0; i < C_idxs.size(); i++) {
+      fprintf(f, "%d %d\n", C_idxs[i], L_idxs[i]);
+    }
+  };    
+  
   std::tuple<CLIndices, std::vector<unsigned>> Internal::buildCLIndices()
   {
     // simplify();
@@ -62,6 +69,9 @@ namespace CaDiCaL
                                // } else if (clause.learnt() && (unsigned) clause.size() > max_lclause_size) {
                                //   return;
                              }
+                               else if (clause.redundant && clause.size > 1000) {
+                                 return;
+                               }                             
                              // else if (clause.redundant) {
                              //   return;
                              // }
@@ -80,6 +90,7 @@ namespace CaDiCaL
                                  }
                                  if (new_v_idx != -1) {
                                    CL_idxs.push_back(n_clauses, sign(lit) ? new_v_idx : (new_v_idx + new_n_vars) );
+                                   push_count++;
                                  }
                                }
 

@@ -17,13 +17,26 @@ void Internal::init_scores (int old_max_var, int new_max_var) {
 // Refocus the EVSIDS heap.
 void Internal::refocus_scores () {
   auto [CL_idxs, nv_to_v] = buildCLIndices();
-  auto V_logits = gnn1(CL_idxs);
-  auto V_probs = torch::softmax(V_logits * 4.0, 0);
-  for (unsigned v_idx = 0; v_idx < nv_to_v.size(); v_idx++) {
-    auto idx = nv_to_v[v_idx] + 1;
-    score (idx) = opts.refocusscale * nv_to_v.size() * V_probs[v_idx].item<double>();
-    if (scores.contains (idx)) scores.update (idx);    
-  }
+      // FILE * dump_file = stdout;
+  FILE* f;
+    if (dump_dir_set_flag)
+      {
+        char dump_path[255];
+        std::sprintf(dump_path, "%sdump_%lu.cnf", dump_dir, dump_count);
+        f = fopen(dump_path, "wb");
+      }
+    else f = stdout;
+
+    CL_idxs.dump(f);
+  
+  // auto V_logits = gnn1(CL_idxs);
+  // auto V_probs = torch::softmax(V_logits * 4.0, 0);
+  // for (unsigned v_idx = 0; v_idx < nv_to_v.size(); v_idx++)
+  //   {
+  //     auto idx = nv_to_v[v_idx] + 1;
+  //     score (idx) = opts.refocusscale * nv_to_v.size() * V_probs[v_idx].item<double>();
+  //     if (scores.contains (idx)) scores.update (idx);    
+  //   }
 };
 
 // Shuffle the EVSIDS heap.
