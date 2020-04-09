@@ -16,18 +16,22 @@ void Internal::init_scores (int old_max_var, int new_max_var) {
 
 // Refocus the EVSIDS heap.
 void Internal::refocus_scores () {
+
+  lim.query = stats.conflicts + opts.queryinterval;
+  printf("REFOCUSING SCORES\n"); // TODO(jesse): remove debug trace  
   auto [CL_idxs, nv_to_v] = buildCLIndices();
       // FILE * dump_file = stdout;
   FILE* f;
     if (dump_dir_set_flag)
       {
         char dump_path[255];
-        std::sprintf(dump_path, "%sdump_%lu.cnf", dump_dir, dump_count);
+        std::sprintf(dump_path, "%srefocus_dump_%lu.cnf", dump_dir, refocus_dump_count);
         f = fopen(dump_path, "wb");
       }
     else f = stdout;
 
     CL_idxs.dump(f);
+    refocus_dump_count++;
   
   // auto V_logits = gnn1(CL_idxs);
   // auto V_probs = torch::softmax(V_logits * 4.0, 0);

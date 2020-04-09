@@ -137,6 +137,7 @@ struct Internal {
 
   GNN1 gnn1;
   int64_t dump_count;           // number of dumped intermediate CNFs
+  int64_t refocus_dump_count;           // number of dumped CL_idxs
   bool unsat;                   // empty clause found or learned
   bool iterating;               // report learned unit ('i' line)
   bool localsearching;          // true during local search
@@ -552,6 +553,7 @@ struct Internal {
   std::tuple<CLIndices, std::vector<unsigned>> buildCLIndices ();
   void shuffle_scores ();
   void refocus_scores ();
+  bool refocusing ();
   void shuffle_queue ();
   void rephase ();
 
@@ -1178,7 +1180,7 @@ inline int External::fixed (int elit) const {
   if (elit < 0) ilit = -ilit;
   return internal->fixed (ilit);
 }
-
+  
 }
 
 #endif

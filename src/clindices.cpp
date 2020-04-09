@@ -1,16 +1,7 @@
-// #include <torch/script.h>
-// #undef LOG
 #include "internal.hpp"
 
 namespace CaDiCaL
 {
-  void CLIndices::dump (FILE* f)
-  {
-    for (unsigned i = 0; i < C_idxs.size(); i++) {
-      fprintf(f, "%d %d\n", C_idxs[i], L_idxs[i]);
-    }
-  };    
-  
   std::tuple<CLIndices, std::vector<unsigned>> Internal::buildCLIndices()
   {
     // simplify();
@@ -174,5 +165,4 @@ namespace CaDiCaL
     // auto V_core_logits = outputs[1];
     return V_logits;
   }
-
-};
+}

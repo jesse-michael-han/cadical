@@ -27,17 +27,25 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 file(GLOB cadical_source_files "src/*.hpp" "src/*.cpp" "*.hpp")
 list(REMOVE_ITEM cadical_source_files "src/cadical.cpp")
+list(REMOVE_ITEM cadical_source_files "src/mobical.cpp")
 # list(REMOVE_ITEM cadical_source_files "src/logging.hpp" "src/logging.cpp")
 
 # add_library(cadical_lib2 "src/logging.hpp" "src/logging.cpp")
 
+add_library (clindices "src/clindices.hpp")
+set_target_properties(clindices PROPERTIES LINKER_LANGUAGE CXX)
+target_link_libraries(clindices ${TORCH_LIBRARIES})
+target_link_libraries(clindices -Wl,--no-as-needed "$ENV{HOME}/org/projects/neuro-minisat/torchscript/build/libmy_ops.so")
+
 add_library(cadical_lib ${cadical_source_files})
-add_executable(cadical src/cadical.cpp)
-target_link_libraries(cadical cadical_lib)
+target_link_libraries(cadical_lib clindices)
 target_link_libraries(cadical_lib "${TORCH_LIBRARIES}")
 target_link_libraries(cadical_lib "${ZLIB_LIBRARY}")
 target_link_libraries(cadical_lib -Wl,--no-as-needed "$ENV{HOME}/org/projects/neuro-minisat/torchscript/build/libmy_ops.so")
 target_link_libraries(cadical_lib OpenMP::OpenMP_CXX)
+
+add_executable(cadical src/cadical.cpp)
+target_link_libraries(cadical cadical_lib)
 
 
 

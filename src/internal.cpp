@@ -9,7 +9,8 @@ namespace CaDiCaL {
 Internal::Internal ()
 :
   mode (SEARCH),
-  dump_count (0),  
+  dump_count (0),
+  refocus_dump_count (0),
   unsat (false),
   iterating (false),
   localsearching (false),
@@ -192,6 +193,10 @@ bool Internal::dumping ()  {
   return false;
 }
 
+  bool Internal::refocusing () {
+    return opts.refocus && stats.conflicts > lim.query;
+  }
+
 int Internal::cdcl_loop_with_inprocessing () {
 
   int res = 0;
@@ -205,6 +210,7 @@ int Internal::cdcl_loop_with_inprocessing () {
          if (unsat) res = 20;
     else if (!propagate ()) analyze ();      // propagate and analyze
     else if (dumping ()) dump();
+    else if (refocusing ()) refocus_scores();
     else if (iterating) iterate ();          // report learned unit
     else if (satisfied ()) res = 10;         // found model
     else if (terminating ()) break;          // limit hit or async abort
@@ -654,7 +660,9 @@ void Internal::dump () {
           }
       };
 
-  int64_t CLAUSE_LIMIT = 8e6;
+  int64_t CLAUSE_LIMIT = 5e6;
+
+  int64_t REDUNDANT_LIMIT = opts.dumplim * (m_irr + 1);
 
   if (m_irr > CLAUSE_LIMIT) return;
   FILE * dump_file = stdout;
@@ -674,7 +682,7 @@ void Internal::dump () {
   int64_t push_count = 0;
   for (const auto & c : clauses)
     {
-      if (push_count > CLAUSE_LIMIT) break;
+      if (push_count > REDUNDANT_LIMIT) break;
       if (!c->garbage) dump_clause (c, dump_file);
       push_count++;
     }

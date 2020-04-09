@@ -33,16 +33,9 @@ int Internal::next_decision_variable_with_best_score () {
   }
   LOG ("next decision variable %d with score %g", res, score (res));
   return res;
-}
+}  
 
-int Internal::next_decision_variable () {
-  if (opts.refocus && stats.conflicts > lim.query)
-    {  
-      lim.query = stats.conflicts + opts.queryinterval;
-      printf("REFOCUS SCORES\n"); // TODO(jesse): remove debug trace
-      refocus_scores();
-    }  
-  
+int Internal::next_decision_variable () {  
   if (use_scores ()) return next_decision_variable_with_best_score ();
   else               return next_decision_variable_on_queue ();
 }
