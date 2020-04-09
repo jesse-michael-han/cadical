@@ -48,8 +48,8 @@ namespace CaDiCaL
     auto CL_idxs = CLIndices();
 
     int new_n_vars = nv_to_v.size();
-    std::cout << "NEW N VARS " << new_n_vars << "\n";
-    std::cout << "v_to_nv " << v_to_nv << "\n";
+    // std::cout << "NEW N VARS " << new_n_vars << "\n";
+    // std::cout << "v_to_nv " << v_to_nv << "\n";
     CL_idxs.set_n_vars(new_n_vars);
 
     int push_count = 0;
@@ -58,19 +58,23 @@ namespace CaDiCaL
     // i.e. this function emits a possibly compressed adjacency matrix; this is all the variable selection heuristic ever sees, and when the result is returned, it is shifted again
     // note: for now, do not pass learned clauses to the heuristic
 
-    bool SIZE_EXCEEDED = false;
+    bool SIZE_EXCEEDED_IRR = false;
+    bool SIZE_EXCEEDED_RED = false;
+    bool LEARNED_FLAG = false;    
 
     auto traverse_clause = [&](Clause & clause) {
                              if (clause.garbage) {
                                return;
-                             } else if (2 * n_vars + n_clauses + push_count > 10000000) {
-                               SIZE_EXCEEDED = true;
+                             } else if (2 * n_vars + n_clauses + push_count > 10000000 ) {
+                               if (!LEARNED_FLAG) SIZE_EXCEEDED_IRR = true;
+                               else SIZE_EXCEEDED_RED = true;
                                return;
                                // } else if (clause.learnt() && (unsigned) clause.size() > max_lclause_size) {
                                //   return;
                              }
-                               else if (clause.redundant && clause.size > 5000) {
-                                 return;
+                               else if (clause.redundant) {
+                                 LEARNED_FLAG = true;
+                                 if (clause.size > 2000) return;
                                }
                              // else if (clause.redundant) {
                              //   return;
@@ -91,6 +95,7 @@ namespace CaDiCaL
                                  int new_v_idx = v_to_nv[v_idx];
                                  if (new_v_idx !=  -1 && new_v_idx >= (int) new_n_vars) {
                                    std::cout << "V_IDX: " << v_idx << " NEW_V_IDX: " << new_v_idx << " NEW_N_VAR: " << new_n_vars << "\n";
+                                   throw std::runtime_error("too many vars");
                                  }
                                  // if (n_clauses == 175) { std::cout << "V_IDX " <<  v_idx << "NEW_V_IDX " << new_v_idx << "NEW N VARS " << new_n_vars << "LIT " << lit << "\n"; }                                 
                                  if (new_v_idx != -1) {
@@ -145,8 +150,11 @@ namespace CaDiCaL
     //     }
     //     c_idx ++;
     //   }
+    
     for (const auto & cls : clauses) {
       traverse_clause(*cls); // TODO(jesse): implement cutoff limit -- assuming learned clauses are pushed back, throw a flag when a learned clause is encountered and begin counting from there
+      if (SIZE_EXCEEDED_IRR) throw std::runtime_error("too many original clauses");
+      if (SIZE_EXCEEDED_RED) break;
     }
 
     // auto c_idx2 = 0;
