@@ -500,6 +500,17 @@ int App::main (int argc, char ** argv) {
   }
   solver->options ();
 
+  if (output_path) {
+    solver->section ("writing output");
+    solver->message ("writing simplified CNF to DIMACS file %s'%s'%s",
+      tout.green_code (), output_path, tout.normal_code ());
+    // err = solver->write_dimacs (output_path, max_var);
+    // if (err) APPERR ("%s", err);
+    solver->internal->propagate();
+    solver->internal->dump();
+    return res;
+  }  
+
   solver->section ("solving");
   res = solver->solve ();
 
@@ -507,14 +518,6 @@ int App::main (int argc, char ** argv) {
     solver->section ("closing proof");
     solver->flush_proof_trace ();
     solver->close_proof_trace ();
-  }
-
-  if (output_path) {
-    solver->section ("writing output");
-    solver->message ("writing simplified CNF to DIMACS file %s'%s'%s",
-      tout.green_code (), output_path, tout.normal_code ());
-    err = solver->write_dimacs (output_path, max_var);
-    if (err) APPERR ("%s", err);
   }
 
   if (extension_path) {

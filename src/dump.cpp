@@ -29,7 +29,7 @@ bool Internal::dumping ()  {
 // Only useful for debugging purposes.
 
 void Internal::dump () {
-    int n_vars = max_var+1;
+    int n_vars = max_var;
 
     // unsigned max_n_nodes_cells = 10000000; // TODO(jesse): don't hardcode this
     // unsigned max_lclause_size = 1000; // TODO(jesse): don't hardcode this

@@ -12,7 +12,7 @@ namespace CaDiCaL
   std::tuple<CLIndices, std::vector<unsigned>> Internal::buildCLIndices()
   {
     // simplify();
-    int n_vars = max_var+1;
+    int n_vars = max_var;
 
     unsigned n_clauses = 0;
 
