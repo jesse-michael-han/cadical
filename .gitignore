@@ -6,3 +6,5 @@ makefile
 /compile_commands.json
 /nohup.out
 /src/compile_commands.json
+/build2/
+/src/nohup.out
