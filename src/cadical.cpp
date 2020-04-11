@@ -4,6 +4,7 @@
 
 #include "internal.hpp"
 #include "signal.hpp"
+#include "ATen/Parallel.h"
 
 /*------------------------------------------------------------------------*/
 
@@ -217,9 +218,11 @@ do { solver->error (__VA_ARGS__); } while (0)
 /*------------------------------------------------------------------------*/
 
 int App::main (int argc, char ** argv) {
+  at::set_num_threads(1);
   const char * proof_path = 0, * solution_path = 0, * dimacs_path = 0;
   const char * output_path = 0, * extension_path = 0, * config = 0;
   const char * dump_dir = 0;
+  const char * model_path = 0;
   int i, res = 0, optimize = 0, preprocessing = 0, localsearch = 0;
   bool proof_specified = false, dimacs_specified = false;
   int conflict_limit = -1, decision_limit = -1;
@@ -268,6 +271,16 @@ int App::main (int argc, char ** argv) {
       // else if (!File::writable (argv[i]))
       //   APPERR ("output file '%s' not writable", argv[i]);
       else dump_dir = argv[i];
+      
+    } else if (!strcmp (argv[i], "-model")) {
+      if (++i == argc) APPERR ("argument to '-model' missing");
+      else if (model_path)
+        APPERR ("multiple output file options '-model %s' and '-model %s'",
+          model_path, argv[i]);
+      // else if (!File::writable (argv[i]))
+      //   APPERR ("output file '%s' not writable", argv[i]);
+      else model_path = argv[i];
+      
     } else if (!strcmp (argv[i], "-e")) {
       if (++i == argc) APPERR ("argument to '-e' missing");
       else if (extension_path)
@@ -509,7 +522,13 @@ int App::main (int argc, char ** argv) {
     solver->internal->propagate();
     solver->internal->dump();
     return res;
-  }  
+  }
+
+  // set model path
+  if ((solver->internal->opts.refocus || solver->internal->opts.rephaserefocus) && !model_path && !solver->internal->opts.randomrefocus)
+    throw std::runtime_error("must supply model path for non-random periodic refocusing!");
+  else if (model_path) solver->internal->gnn1.init_model(model_path);
+  
 
   solver->section ("solving");
   res = solver->solve ();

@@ -703,6 +703,7 @@ void Internal::analyze () {
   UPDATE_AVERAGE (averages.current.glue.slow, glue);
   stats.learned.literals += size;
   stats.learned.clauses++;
+  stats.avg_glue = ((stats.learned.clauses - 1) * stats.avg_glue + (double) glue)/((double) stats.learned.clauses);
   assert (glue < size);
 
   // Update decision heuristics.

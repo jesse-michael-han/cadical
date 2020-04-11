@@ -135,6 +135,7 @@ struct Internal {
 
   /*----------------------------------------------------------------------*/
 
+  bool refocused;               // flag for refocus_scores()
   GNN1 gnn1;
   int64_t dump_count;           // number of dumped intermediate CNFs
   int64_t refocus_dump_count;           // number of dumped CL_idxs

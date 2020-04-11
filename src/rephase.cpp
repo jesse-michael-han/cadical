@@ -222,7 +222,15 @@ void Internal::rephase () {
   last.rephase.conflicts = stats.conflicts;
   rephased = type;
 
-  if (stable) shuffle_scores ();
+  if (stable)
+    {
+      if (opts.rephaserefocus) refocus_scores (); 
+      else
+        {
+          // std::cout << " SHUFFLING \n";
+          shuffle_scores ();
+        }
+    }
   else shuffle_queue ();
 }
 

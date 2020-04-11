@@ -74,11 +74,16 @@ void Internal::dump () {
           }
       };
 
-  int64_t CLAUSE_LIMIT = 5e6;
+  int64_t CLAUSE_LIMIT = 500e3;
 
   int64_t REDUNDANT_LIMIT = opts.dumplim * (m_irr + 1);
 
-  if (m_irr > CLAUSE_LIMIT) return;
+  if (m_irr > CLAUSE_LIMIT)
+    {
+      std::cout << "CLAUSE LIMIT " << CLAUSE_LIMIT << " EXCEEDED: " << m_irr << "\n";
+      return;
+    }
+  
   FILE * dump_file = stdout;
   if (dump_dir_set_flag)
   {

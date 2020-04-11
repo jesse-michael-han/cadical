@@ -117,6 +117,7 @@ OPTION( profile,           2,  0,  4, 0, "profiling level") \
 OPTION( queryinterval,     0,  0,  2e9, 2, "query interval") \
 QUTOPT( quiet,             0,  0,  1, 0, "disable all messages") \
 OPTION( radixsortlim,    800,  0,2e9, 0, "radix sort limit") \
+OPTION( randomrefocus,    0,  0,1, 0, "random refocusing") \
 OPTION( realtime,          0,  0,  1, 0, "real instead of process time") \
 OPTION( reduce,            1,  0,  1, 0, "reduce useless clauses") \
 OPTION( reduceint,       300, 10,1e6, 0, "reduce interval") \
@@ -124,11 +125,12 @@ OPTION( reducetarget,     75, 10,1e2, 0, "reduce fraction in percent") \
 OPTION( reducetier1glue,   2,  1,2e9, 0, "glue of kept learned clauses") \
 OPTION( reducetier2glue,   6,  1,2e9, 0, "glue of tier two clauses") \
 OPTION( refocus,             0,  0,  1, 0, "use periodic refocusing") \
-OPTION( refocusscale,   1e4,  1, 1e10, 0, "periodic refocusing scale") \
+OPTION( refocusscale,   1e4,  1, 1e100, 0, "periodic refocusing scale") \
 OPTION( reluctant,      1024,  0,2e9, 0, "reluctant doubling period") \
 OPTION( reluctantmax,1048576,  0,2e9, 0, "reluctant doubling period") \
 OPTION( rephase,           1,  0,  1, 0, "enable resetting phase") \
 OPTION( rephaseint,      1e3,  1,2e9, 0, "rephase interval") \
+OPTION( rephaserefocus,    0,  0,  1, 0, "enable resetting phase") \
 OPTION( report,report_default_value,  0,  1, 0, "enable reporting") \
 OPTION( reportall,         0,  0,  1, 0, "report even if not successful") \
 OPTION( reportsolve,       0,  0,  1, 0, "use solving not process time") \

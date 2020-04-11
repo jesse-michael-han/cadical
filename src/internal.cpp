@@ -9,6 +9,7 @@ namespace CaDiCaL {
 Internal::Internal ()
 :
   mode (SEARCH),
+  refocused (false),
   dump_count (0),
   refocus_dump_count (0),
   unsat (false),
@@ -181,10 +182,6 @@ void Internal::add_original_lit (int lit) {
 
 // This is the main CDCL loop with interleaved inprocessing.
 
-  bool Internal::refocusing () {
-    return opts.refocus && stats.conflicts > lim.query;
-  }
-
 int Internal::cdcl_loop_with_inprocessing () {
 
   int res = 0;
@@ -197,12 +194,10 @@ int Internal::cdcl_loop_with_inprocessing () {
   while (!res) {
          if (unsat) res = 20;
     else if (!propagate ()) analyze ();      // propagate and analyze
-    else if (dumping ()) dump();
-    else if (refocusing ()) refocus_scores();
     else if (iterating) iterate ();          // report learned unit
     else if (satisfied ()) res = 10;         // found model
     else if (terminating ()) break;          // limit hit or async abort
-    else if (restarting ()) restart ();      // restart by backtracking
+    else if (restarting ()) restart ();      // restart by backtracking         
     else if (rephasing ()) rephase ();       // reset variable phases
     else if (reducing ()) reduce ();         // collect useless clauses
     else if (probing ()) probe ();           // failed literal probing
@@ -210,6 +205,8 @@ int Internal::cdcl_loop_with_inprocessing () {
     else if (eliminating ()) elim ();        // variable elimination
     else if (compacting ()) compact ();      // collect variables
     else if (conditioning ()) condition ();  // globally blocked clauses
+    else if (dumping ()) dump();
+    else if (refocusing ()) refocus_scores();         
     else
       { res = decide (); };                    // next decision
   }

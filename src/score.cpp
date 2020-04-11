@@ -2,7 +2,10 @@
 
 namespace CaDiCaL {
 
-
+  bool Internal::refocusing () {
+    return opts.refocus && stats.conflicts > lim.query;
+  }
+  
 // This initializes variables on the binary 'scores' heap also with
 // smallest variable index first (thus picked first) and larger indices at
 // the end.
@@ -16,41 +19,59 @@ void Internal::init_scores (int old_max_var, int new_max_var) {
 
 // Refocus the EVSIDS heap.
 void Internal::refocus_scores () {
+  refocused = true;
+      printf("REFOCUSING SCORES\n");  
   // auto CL_idxs = CLIndices();
   // auto nv_to_v = std::vector<int>();
-
+  auto [CL_idxs, nv_to_v] = buildCLIndices();
   lim.query = stats.conflicts + opts.queryinterval;
-  // printf("REFOCUSING SCORES\n"); // TODO(jesse): remove debug trace
-  try
-    {  
-      auto [CL_idxs, nv_to_v] = buildCLIndices();
-      FILE* f;
-      if (dump_dir_set_flag)
-        {
-          char dump_path[255];
-          std::sprintf(dump_path, "%srefocus_dump_%lu.cnf", dump_dir, refocus_dump_count);
-          f = fopen(dump_path, "wb");
-        }
-      else f = stdout;
 
-      CL_idxs.dump(f);
-      refocus_dump_count++;      
-    }
-  catch (std::runtime_error &e)
+  torch::Tensor V_logits;
+  if (!opts.randomrefocus)
     {
-      std::cout << e.what() << "\n";
-      return  ;
-    }
-      // FILE * dump_file = stdout;
+      
   
-  // auto V_logits = gnn1(CL_idxs);
-  // auto V_probs = torch::softmax(V_logits * 4.0, 0);
-  // for (unsigned v_idx = 0; v_idx < nv_to_v.size(); v_idx++)
-  //   {
-  //     auto idx = nv_to_v[v_idx] + 1;
-  //     score (idx) = opts.refocusscale * nv_to_v.size() * V_probs[v_idx].item<double>();
-  //     if (scores.contains (idx)) scores.update (idx);    
-  //   }
+      // ############# DEBUGGING DUMP ######################################
+      // try
+      //   {  
+      //     auto [CL_idxs, nv_to_v] = buildCLIndices();
+      //     FILE* f;
+      //     if (dump_dir_set_flag)
+      //       {
+      //         char dump_path[255];
+      //         std::sprintf(dump_path, "%srefocus_dump_%lu.cnf", dump_dir, refocus_dump_count);
+      //         f = fopen(dump_path, "wb");
+      //       }
+      //     else f = stdout;
+
+      //     CL_idxs.dump(f);
+      //     refocus_dump_count++;      
+      //   }
+      // catch (std::runtime_error &e)
+      //   {
+      //     std::cout << e.what() << "\n";
+      //     return  ;
+      //   }
+      // ###################################################################  
+  
+      V_logits = gnn1(CL_idxs);
+
+    }
+  else
+    {
+      V_logits = torch::rand(CL_idxs.n_vars).to(torch::kFloat32);
+    }
+
+  auto V_probs = torch::softmax(V_logits * 4.0, 0);
+  for (unsigned v_idx = 0; v_idx < nv_to_v.size(); v_idx++)
+    {
+      auto idx = nv_to_v[v_idx] + 1;
+      score (idx) = opts.refocusscale * nv_to_v.size() * V_probs[v_idx].item<double>();
+      if (scores.contains (idx))
+        {
+          scores.update (idx);
+        }
+    }
 };
 
 // Shuffle the EVSIDS heap.

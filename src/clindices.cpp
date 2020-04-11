@@ -3,6 +3,37 @@
 namespace CaDiCaL
 {
 
+  // struct Clause_lt {
+  //   bool operator() (Clause* c1, Clause* c2)
+  //   {
+  //     if (!c1 -> redundant && c2 -> redundant) {
+  //       return true;
+  //     }
+  //     else
+  //       {
+  //         if (!c2 -> redundant && c1 -> redundant) {
+  //           return false;
+  //         }
+  //         else {
+  //           if (!c1 -> redundant) {
+  //             return false;
+  //           }
+  //           else {
+  //             return c1 -> glue < c2 -> glue;
+  //           }
+  //         }
+  //       }
+  //   }
+  // };
+  // struct Clause_rk {
+  //   unsigned operator() (Clause *c1) {
+  //     if (!c1 -> redundant) return 0;
+  //     else {
+  //       return c1 -> glue;
+  //     }
+  //   }
+  // };
+
   void CLIndices::dump (FILE* f)
   {
     for (unsigned i = 0; i < C_idxs.size(); i++) {
@@ -74,9 +105,9 @@ namespace CaDiCaL
                                // } else if (clause.learnt() && (unsigned) clause.size() > max_lclause_size) {
                                //   return;
                              }
-                               else if (clause.redundant) {
+                             else if (clause.redundant) {
                                  LEARNED_FLAG = true;
-                                 if (clause.size > 2000) return;
+                                 if ((double) clause.size > averages.current.glue.slow) return;
                                }
                              // else if (clause.redundant) {
                              //   return;
@@ -153,6 +184,8 @@ namespace CaDiCaL
     //     }
     //     c_idx ++;
     //   }
+
+    // rsort(clauses.begin(), clauses.end(), Clause_rk());
     
     for (const auto & cls : clauses) {
       traverse_clause(*cls); // TODO(jesse): implement cutoff limit -- assuming learned clauses are pushed back, throw a flag when a learned clause is encountered and begin counting from there

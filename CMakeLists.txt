@@ -1,12 +1,14 @@
 cmake_minimum_required(VERSION 3.0)
 project(CaDiCaL C CXX)
 
+set(CMAKE_PREFIX_PATH "$ENV{HOME}/Downloads/libtorch")
+
 find_package(Torch REQUIRED)
 find_package(ATen REQUIRED)
 find_package(OpenMP REQUIRED)
 
-set(CMAKE_CXX_COMPILER $ENV{HOME}/.local/bin/g++)
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -O0 -DNDEBUG")
+# set(CMAKE_CXX_COMPILER $ENV{HOME}/.local/bin/g++)
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -O3 -DNDEBUG")
 set(CMAKE_CXX_STANDARD 17)
 
 set(VERSION "0.0")

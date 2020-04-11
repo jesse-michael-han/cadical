@@ -106,6 +106,7 @@ struct Stats {
   int64_t chrono;       // chronological backtracks
   int64_t backtracks;   // number of backtracks
   int64_t improvedglue; // improved glue during bumping
+  double avg_glue;  // global average glue of learned clauses
   int64_t promoted1;    // promoted clauses to tier one
   int64_t promoted2;    // promoted clauses to tier two
   int64_t bumped;       // seen and bumped variables in 'analyze'

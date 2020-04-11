@@ -69,6 +69,8 @@ void Stats::print (Internal * internal) {
   PRT ("compacts:        %15" PRId64 "   %10.2f    interval", stats.compacts, relative (stats.conflicts, stats.compacts));
   if (all || stats.conflicts) {
   PRT ("conflicts:       %15" PRId64 "   %10.2f    per second", stats.conflicts, relative (stats.conflicts, t));
+  PRT ("GLR:             %15.5f          %10s", (double) ((double) stats.conflicts / (double) (stats.decisions)), "");
+  PRT ("avg glue:        %15.5f          %10s", stats.avg_glue, "");
   PRT ("  backtracked:   %15" PRId64 "   %10.2f %%  of conflicts", stats.backtracks, percent (stats.backtracks, stats.conflicts));
   }
   if (all || stats.conditioned) {
