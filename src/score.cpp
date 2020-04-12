@@ -72,6 +72,7 @@ void Internal::refocus_scores () {
           scores.update (idx);
         }
     }
+  stats.refocus_count++;
 };
 
 // Shuffle the EVSIDS heap.

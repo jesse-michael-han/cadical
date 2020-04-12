@@ -1055,7 +1055,7 @@ struct Internal {
   // Dump to '<stdout>' as DIMACS for debugging.
   //
   // void dump_clause (Clause *, FILE *);
-  void dump ();
+  void dump (bool dump_learned=true);
   bool dumping ();
 
   // Export and traverse all irredundant (non-unit) clauses.
@@ -1078,6 +1078,7 @@ struct Internal {
   void report (char type, int verbose_level = 0);
 
   void print_stats ();          // Complete statistics.
+  void serialize_stats(int res, FILE* fp);
 
   /*----------------------------------------------------------------------*/
 

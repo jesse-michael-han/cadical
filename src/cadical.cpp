@@ -223,6 +223,7 @@ int App::main (int argc, char ** argv) {
   const char * output_path = 0, * extension_path = 0, * config = 0;
   const char * dump_dir = 0;
   const char * model_path = 0;
+  const char * serialization_path = 0;
   int i, res = 0, optimize = 0, preprocessing = 0, localsearch = 0;
   bool proof_specified = false, dimacs_specified = false;
   int conflict_limit = -1, decision_limit = -1;
@@ -280,6 +281,15 @@ int App::main (int argc, char ** argv) {
       // else if (!File::writable (argv[i]))
       //   APPERR ("output file '%s' not writable", argv[i]);
       else model_path = argv[i];
+
+    } else if (!strcmp (argv[i], "-so")) {
+      if (++i == argc) APPERR ("argument to '-so' missing");
+      else if (serialization_path)
+        APPERR ("multiple output file options '-so %s' and '-so %s'",
+          serialization_path, argv[i]);
+      // else if (!File::writable (argv[i]))
+      //   APPERR ("output file '%s' not writable", argv[i]);
+      else serialization_path = argv[i];      
       
     } else if (!strcmp (argv[i], "-e")) {
       if (++i == argc) APPERR ("argument to '-e' missing");
@@ -520,7 +530,7 @@ int App::main (int argc, char ** argv) {
     // err = solver->write_dimacs (output_path, max_var);
     // if (err) APPERR ("%s", err);
     solver->internal->propagate();
-    solver->internal->dump();
+    solver->internal->dump(false);
     return res;
   }
 
@@ -558,6 +568,13 @@ int App::main (int argc, char ** argv) {
   else printf ("c UNKNOWN\n");
   fflush (stdout);
   solver->statistics ();
+  if (serialization_path)
+    {    
+      FILE* sofp = fopen(serialization_path, "w");
+        solver->internal->serialize_stats (res, sofp);
+        fflush(sofp);
+        fclose(sofp);
+    }
   solver->section ("shutting down");
   solver->message ("exit %d", res);
   if (less_pipe) {

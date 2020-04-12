@@ -215,10 +215,12 @@ struct Stats {
   int64_t unused;        // number of unused variables
   int64_t active;        // number of active variables
   int64_t inactive;      // number of inactive variables
+  int64_t refocus_count; // counter for periodic refocuses
 
   Stats ();
 
   void print (Internal *);
+  void serialize (Internal * internal, int res, FILE* fp); // serialize some stats to JSON
 };
 
 /*------------------------------------------------------------------------*/

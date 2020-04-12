@@ -619,6 +619,11 @@ void Internal::print_stats () {
   if (checker) checker->print_stats ();
 }
 
+void Internal::serialize_stats(int res, FILE* fp)
+{
+  stats.serialize(this, res, fp);
+}
+
 /*------------------------------------------------------------------------*/
 
 bool Internal::traverse_clauses (ClauseIterator & it) {

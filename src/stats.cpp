@@ -23,6 +23,41 @@ do { \
 
 /*------------------------------------------------------------------------*/
 
+  void Stats::serialize (Internal * internal, int res, FILE* fp)
+{
+  Stats & stats = internal->stats;
+  fprintf(fp, "{\n");
+  fprintf(fp, "\"starts\" : %lu,\n", stats.restarts);        
+  fprintf(fp, "\"cpu_time\" : %f,\n", internal->process_time());
+  auto m = maximum_resident_set_size ();
+  fprintf(fp, "\"mem_used\" : %f,\n", m/(double)(1l<<20));
+  fprintf(fp, "\"conflicts\" : %lu,\n", stats.conflicts);
+  fprintf(fp, "\"decisions\" : %lu,\n", stats.decisions);
+  int64_t propagations = 0;
+  propagations += stats.propagations.cover;
+  propagations += stats.propagations.probe;
+  propagations += stats.propagations.search;
+  propagations += stats.propagations.transred;
+  propagations += stats.propagations.vivify;
+  propagations += stats.propagations.walk;  
+  fprintf(fp, "\"propagations\" : %lu,\n", propagations);
+  // fprintf(fp, "\"conflict_literals\" : %lu,\n", conflict_literals);
+  fprintf(fp, "\"num_queries\" : %lu,\n", stats.refocus_count);
+  fprintf(fp, "\"avg_glue\" : %f,\n", stats.avg_glue);
+  if (res == 10) {
+    fprintf(fp, "\"result\" : true\n");
+  }
+  else {
+    if (res == 20) {
+      fprintf(fp, "\"result\" : false\n");
+    }
+    else {
+      fprintf(fp, "\"result\" : null\n");
+    }
+  }
+  fprintf(fp, "\n}\n");  
+}
+
 void Stats::print (Internal * internal) {
 
 #ifdef QUIET
@@ -71,6 +106,7 @@ void Stats::print (Internal * internal) {
   PRT ("conflicts:       %15" PRId64 "   %10.2f    per second", stats.conflicts, relative (stats.conflicts, t));
   PRT ("GLR:             %15.5f          %10s", (double) ((double) stats.conflicts / (double) (stats.decisions)), "");
   PRT ("avg glue:        %15.5f          %10s", stats.avg_glue, "");
+  PRT ("refocus count:  %15" PRId64 "  %10s", stats.refocus_count, "");
   PRT ("  backtracked:   %15" PRId64 "   %10.2f %%  of conflicts", stats.backtracks, percent (stats.backtracks, stats.conflicts));
   }
   if (all || stats.conditioned) {
