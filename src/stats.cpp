@@ -23,11 +23,34 @@ do { \
 
 /*------------------------------------------------------------------------*/
 
+  void Stats::gen_lbd_label(Internal* internal, FILE* fp) // for now, just do glue counts
+  {
+    int emax_var = internal->externalize(internal->max_var);
+    std::vector<int> labels(emax_var, 0);
+    for (auto &cls : internal->clauses)
+      {
+        if (!cls->redundant) continue;
+        if (cls->keep) {
+          for (auto &lit : *cls) {
+            auto v_idx = internal->externalize(internal->vidx(lit))-1;
+            labels[v_idx] += 1;
+          }
+        }
+      }
+    // fprintf(fp, "{\n");
+    int idx = 0;
+    for (auto &count : labels) {
+      fprintf(fp, "%d %d\n", idx, count);
+      idx ++;
+    }
+    // fprintf(fp, "\n}\n");
+  }
+
   void Stats::serialize (Internal * internal, int res, FILE* fp)
 {
   Stats & stats = internal->stats;
   fprintf(fp, "{\n");
-  fprintf(fp, "\"starts\" : %lu,\n", stats.restarts);        
+  fprintf(fp, "\"starts\" : %lu,\n", stats.restarts);
   fprintf(fp, "\"cpu_time\" : %f,\n", internal->process_time());
   auto m = maximum_resident_set_size ();
   fprintf(fp, "\"mem_used\" : %f,\n", m/(double)(1l<<20));
@@ -39,11 +62,14 @@ do { \
   propagations += stats.propagations.search;
   propagations += stats.propagations.transred;
   propagations += stats.propagations.vivify;
-  propagations += stats.propagations.walk;  
+  propagations += stats.propagations.walk;
   fprintf(fp, "\"propagations\" : %lu,\n", propagations);
   // fprintf(fp, "\"conflict_literals\" : %lu,\n", conflict_literals);
   fprintf(fp, "\"num_queries\" : %lu,\n", stats.refocus_count);
   fprintf(fp, "\"avg_glue\" : %f,\n", stats.avg_glue);
+  fprintf(fp, "\"random_seed\" : %d,\n", internal->opts.seed);
+  fprintf(fp, "\"avg_refocus_time\" : %f,\n", stats.total_refocus_time == 0 ? 0 : stats.total_refocus_time/((double )stats.refocus_count));
+  fprintf(fp, "\"oom_count\" : %lu,\n", stats.oom_count);
   if (res == 10) {
     fprintf(fp, "\"result\" : true\n");
   }
@@ -55,7 +81,7 @@ do { \
       fprintf(fp, "\"result\" : null\n");
     }
   }
-  fprintf(fp, "\n}\n");  
+  fprintf(fp, "\n}\n");
 }
 
 void Stats::print (Internal * internal) {
@@ -106,7 +132,10 @@ void Stats::print (Internal * internal) {
   PRT ("conflicts:       %15" PRId64 "   %10.2f    per second", stats.conflicts, relative (stats.conflicts, t));
   PRT ("GLR:             %15.5f          %10s", (double) ((double) stats.conflicts / (double) (stats.decisions)), "");
   PRT ("avg glue:        %15.5f          %10s", stats.avg_glue, "");
-  PRT ("refocus count:  %15" PRId64 "  %10s", stats.refocus_count, "");
+  PRT ("avg refocus:     %15.5f          %10s", stats.total_refocus_time == 0 ? 0 : stats.total_refocus_time/((double )stats.refocus_count), "");
+  PRT ("refocus time:    %15.5f          %10s", stats.total_refocus_time, "");
+  PRT ("refocus count:   %15" PRId64 "  %10s", stats.refocus_count, "");
+  PRT ("OOM count:       %15" PRId64 "  %10s", stats.oom_count, "");
   PRT ("  backtracked:   %15" PRId64 "   %10.2f %%  of conflicts", stats.backtracks, percent (stats.backtracks, stats.conflicts));
   }
   if (all || stats.conditioned) {

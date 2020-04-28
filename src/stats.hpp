@@ -98,6 +98,7 @@ struct Stats {
   int64_t restartstable;// actual number of happened restarts
   int64_t stabphases;   // number of stabilization phases
   int64_t stabconflicts;// number of search conflicts during stabilizing
+  int64_t unstabconflicts; // number of search conflicts during non-stabilizing
   int64_t rescored;     // number of times scores were rescored
   int64_t reused;       // number of reused trails
   int64_t reusedlevels; // reused levels at restart
@@ -107,6 +108,7 @@ struct Stats {
   int64_t backtracks;   // number of backtracks
   int64_t improvedglue; // improved glue during bumping
   double avg_glue;  // global average glue of learned clauses
+  double total_refocus_time;
   int64_t promoted1;    // promoted clauses to tier one
   int64_t promoted2;    // promoted clauses to tier two
   int64_t bumped;       // seen and bumped variables in 'analyze'
@@ -215,12 +217,16 @@ struct Stats {
   int64_t unused;        // number of unused variables
   int64_t active;        // number of active variables
   int64_t inactive;      // number of inactive variables
+  int64_t stab_refocus_count;
+  int64_t unstab_refocus_count;
   int64_t refocus_count; // counter for periodic refocuses
+  int64_t oom_count; // counter for CUDA OOM errors during querying
 
   Stats ();
 
   void print (Internal *);
   void serialize (Internal * internal, int res, FILE* fp); // serialize some stats to JSON
+  void gen_lbd_label (Internal* internal, FILE* fp);
 };
 
 /*------------------------------------------------------------------------*/

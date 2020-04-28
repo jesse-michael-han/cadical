@@ -49,5 +49,3 @@ target_link_libraries(cadical_lib OpenMP::OpenMP_CXX)
 add_executable(cadical src/cadical.cpp)
 target_link_libraries(cadical cadical_lib)
 
-
-

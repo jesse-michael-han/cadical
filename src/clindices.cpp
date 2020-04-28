@@ -1,7 +1,27 @@
 #include "internal.hpp"
+// #include "torch/nn/parallel/data_parallel.h" // don't include this, as it's unneeded -- rely on the user to supply GPU availability in form of opts.gpu flag
 
 namespace CaDiCaL
 {
+
+  void GNN1::init_model(const char* model_path, int seed, bool use_gpu)
+  {
+    torch::manual_seed(seed);
+    MODEL_PATH = std::string(model_path);
+    CUDA_FLAG = false;
+    // CUDA_FLAG = true;
+    // module.to(at::kCUDA);    
+    
+    if (use_gpu)
+    {
+      CUDA_FLAG = true;
+      module = torch::jit::load(MODEL_PATH, torch::kCUDA);
+    }
+    else
+    {
+      module = torch::jit::load(MODEL_PATH);
+    }
+  }
 
   // struct Clause_lt {
   //   bool operator() (Clause* c1, Clause* c2)
@@ -89,7 +109,6 @@ namespace CaDiCaL
 
     // the solver is responsible for maintaining state to translate shifted variables
     // i.e. this function emits a possibly compressed adjacency matrix; this is all the variable selection heuristic ever sees, and when the result is returned, it is shifted again
-    // note: for now, do not pass learned clauses to the heuristic
 
     bool SIZE_EXCEEDED_IRR = false;
     bool SIZE_EXCEEDED_RED = false;
@@ -98,7 +117,7 @@ namespace CaDiCaL
     auto traverse_clause = [&](Clause & clause) {
                              if (clause.garbage) {
                                return;
-                             } else if (2 * n_vars + n_clauses + push_count > 10000000 ) {
+                             } else if (2 * n_vars + n_clauses + push_count > (unsigned) opts.irrlim ) {
                                if (!LEARNED_FLAG) SIZE_EXCEEDED_IRR = true;
                                else SIZE_EXCEEDED_RED = true;
                                return;
@@ -107,7 +126,9 @@ namespace CaDiCaL
                              }
                              else if (clause.redundant) {
                                  LEARNED_FLAG = true;
-                                 if ((double) clause.size > averages.current.glue.slow) return;
+                                 // if ((double) clause.glue > averages.current.glue.slow) return;
+                                 // if (!clause.keep) return;
+                                 if (clause.glue > 5) return;
                                }
                              // else if (clause.redundant) {
                              //   return;
@@ -186,12 +207,17 @@ namespace CaDiCaL
     //   }
 
     // rsort(clauses.begin(), clauses.end(), Clause_rk());
+
+    // std::cout << "TRAVERSING CLAUSES\n";
     
     for (const auto & cls : clauses) {
       traverse_clause(*cls); // TODO(jesse): implement cutoff limit -- assuming learned clauses are pushed back, throw a flag when a learned clause is encountered and begin counting from there
-      if (SIZE_EXCEEDED_IRR) throw std::runtime_error("too many original clauses");
-      if (SIZE_EXCEEDED_RED) break;
+      if (SIZE_EXCEEDED_IRR) {return {CLIndices(), {}};}
+      if (SIZE_EXCEEDED_RED) {std::cout << "SIZE EXCEEDED BUT CONTINUING\n"; break; }
     }
+    // std::cout << "CONTINUING\n";
+
+    
 
     // auto c_idx2 = 0;
 
@@ -212,28 +238,32 @@ namespace CaDiCaL
     return std::tuple<CLIndices, std::vector<unsigned>> {CL_idxs, nv_to_v};
   }
 
-  torch::Tensor GNN1::get_logits(CLIndices &CL_idxs) {
+  torch::Tensor GNN1::get_logits(CLIndices &CL_idxs) { // populates probs
     long n_cells = CL_idxs.C_idxs.size();
-
     auto C_indices = torch::from_blob(CL_idxs.C_idxs.data(), {n_cells}, torch::TensorOptions().dtype(torch::kInt32)).to(torch::kLong);
     auto L_indices = torch::from_blob(CL_idxs.L_idxs.data(), {n_cells}, torch::TensorOptions().dtype(torch::kInt32)).to(torch::kLong);
-    auto indices = torch::stack({C_indices, L_indices});
+    auto indices = torch::stack({C_indices, L_indices})// .to(CUDA_FLAG ? torch::kCUDA : torch :: kCPU)
+      ;
 
-    auto values = torch::ones({n_cells}).to(torch::kFloat32);
+    auto values = torch::ones({n_cells}).to(torch::kFloat32)// .to(CUDA_FLAG ? torch::kCUDA : torch :: kCPU)
+      ;
     int64_t n_clauses = CL_idxs.n_clauses;
     int64_t n_lits = CL_idxs.n_vars * 2;
     std::vector<int64_t> sizes = {n_clauses, n_lits};
-
+ 
     auto G = at::sparse_coo_tensor(indices, values, sizes);
+    if (CUDA_FLAG)
+      {
+      G = G.to(torch::kCUDA);
+    }
     std::vector<torch::jit::IValue> inputs = {G};
-
+    
     // auto outputs = module.forward(inputs).toTuple();
     // auto V_drat_logits = outputs -> elements()[0].toTensor().squeeze();
     auto outputs = module.forward(inputs).toTensor();
-    auto V_logits = outputs.squeeze();
+    return outputs.squeeze();
 
     // V_drat_logits = V_drat_logits.view({1, V_drat_logits.size(0)});
     // auto V_core_logits = outputs[1];
-    return V_logits;
   }
 }

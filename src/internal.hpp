@@ -136,6 +136,7 @@ struct Internal {
   /*----------------------------------------------------------------------*/
 
   bool refocused;               // flag for refocus_scores()
+  int refocus_skip_level;
   GNN1 gnn1;
   int64_t dump_count;           // number of dumped intermediate CNFs
   int64_t refocus_dump_count;           // number of dumped CL_idxs
@@ -150,6 +151,7 @@ struct Internal {
   bool reported;                // reported in this solving call
   char rephased;                // last type of resetting phases
   Reluctant reluctant;          // restart counter in stable mode
+  Reluctant refocus_reluctant;
   size_t vsize;                 // actually allocated variable data size
   int max_var;                  // internal maximum variable index
   int level;                    // decision level ('control.size () - 1')
@@ -534,6 +536,7 @@ struct Internal {
   //
   bool stabilizing ();
   bool restarting ();
+  bool glue_sucks (int mgn);
   int reuse_trail ();
   void restart ();
 
@@ -554,6 +557,7 @@ struct Internal {
   std::tuple<CLIndices, std::vector<unsigned>> buildCLIndices ();
   void shuffle_scores ();
   void refocus_scores ();
+  void refocus_queue ();
   bool refocusing ();
   void shuffle_queue ();
   void rephase ();

@@ -224,6 +224,7 @@ int App::main (int argc, char ** argv) {
   const char * dump_dir = 0;
   const char * model_path = 0;
   const char * serialization_path = 0;
+  const char * lbd_label_path = 0;
   int i, res = 0, optimize = 0, preprocessing = 0, localsearch = 0;
   bool proof_specified = false, dimacs_specified = false;
   int conflict_limit = -1, decision_limit = -1;
@@ -289,7 +290,14 @@ int App::main (int argc, char ** argv) {
           serialization_path, argv[i]);
       // else if (!File::writable (argv[i]))
       //   APPERR ("output file '%s' not writable", argv[i]);
-      else serialization_path = argv[i];      
+      else serialization_path = argv[i];            
+
+    } else if (!strcmp (argv[i], "-ll")) {
+      if (++i == argc) APPERR ("argument to '-ll' missing");
+      else if (lbd_label_path)
+        APPERR ("multiple output file options '-ll %s' and '-ll %s'",
+          lbd_label_path, argv[i]);
+      else lbd_label_path = argv[i];
       
     } else if (!strcmp (argv[i], "-e")) {
       if (++i == argc) APPERR ("argument to '-e' missing");
@@ -537,7 +545,7 @@ int App::main (int argc, char ** argv) {
   // set model path
   if ((solver->internal->opts.refocus || solver->internal->opts.rephaserefocus) && !model_path && !solver->internal->opts.randomrefocus)
     throw std::runtime_error("must supply model path for non-random periodic refocusing!");
-  else if (model_path) solver->internal->gnn1.init_model(model_path);
+  else if (model_path) solver->internal->gnn1.init_model(model_path, solver->internal->opts.seed, solver->internal->opts.gpu);
   
 
   solver->section ("solving");
@@ -575,6 +583,15 @@ int App::main (int argc, char ** argv) {
         fflush(sofp);
         fclose(sofp);
     }
+
+  if (lbd_label_path)
+    {
+      FILE* llfp = fopen(lbd_label_path, "w");
+      solver->internal->stats.gen_lbd_label(solver->internal, llfp);
+      fflush(llfp);
+      fclose(llfp);
+    }
+  
   solver->section ("shutting down");
   solver->message ("exit %d", res);
   if (less_pipe) {

@@ -41,6 +41,7 @@ OPTION( chrono,            1,  0,  2, 0, "chronological backtracking") \
 OPTION( chronoalways,      0,  0,  1, 0, "force always chronological") \
 OPTION( chronolevelim,   1e2,  0,2e9, 0, "chronological level limit") \
 OPTION( chronoreusetrail,  1,  0,  1, 0, "reuse trail chronologically") \
+OPTION( clauselim,       1e6,  1,2e9, 0, "clause limit for dump") \
 OPTION( compact,           1,  0,  1, 0, "compact internal variables") \
 OPTION( compactint,      2e3,  1,2e9, 0, "compacting interval") \
 OPTION( compactlim,      1e2,  0,1e3, 0, "inactive limit in per mille") \
@@ -95,11 +96,13 @@ OPTION( flush,             0,  0,  1, 0, "flush redundant clauses") \
 OPTION( flushfactor,       3,  1,1e3, 0, "interval increase") \
 OPTION( flushint,        1e5,  1,2e9, 0, "initial limit") \
 OPTION( forcephase,        0,  0,  1, 0, "always use initial phase") \
+OPTION( gpu,               0,  0,  1, 0, "use gpu") \
 OPTION( inprocessing,      1,  0,  1, 0, "enable inprocessing") \
 OPTION( instantiate,       0,  0,  1, 0, "variable instantiation") \
 OPTION( instantiateclslim, 3,  2,2e9, 0, "minimum clause size") \
 OPTION( instantiateocclim, 1,  1,2e9, 2, "maximum occurrence limit") \
 OPTION( instantiateonce,   1,  0,  1, 0, "instantiate each clause once") \
+OPTION( irrlim,   10e6,  0,  1e10, 0, "clause limit for serialization before querying") \
 LOGOPT( log,               0,  0,  1, 0, "enable logging") \
 LOGOPT( logsort,           0,  0,  1, 0, "sort logged clauses") \
 OPTION( lucky,             1,  0,  1, 0, "search for lucky phases") \
@@ -125,6 +128,13 @@ OPTION( reducetarget,     75, 10,1e2, 0, "reduce fraction in percent") \
 OPTION( reducetier1glue,   2,  1,2e9, 0, "glue of kept learned clauses") \
 OPTION( reducetier2glue,   6,  1,2e9, 0, "glue of tier two clauses") \
 OPTION( refocus,             0,  0,  1, 0, "use periodic refocusing") \
+OPTION( refocusceil,    50000,  0,  2e9, 0, "refocus decay ceil") \
+OPTION( refocusdecaybase,    5000,  0,  2e9, 0, "refocus decay base") \
+OPTION( refocusdecayexp,    1,  0,  1000, 0, "refocus decay exponent") \
+OPTION( refocusgluesucks,    0,  0,  1, 0, "refocus if glue sucks") \
+OPTION( refocusgluesucksmargin, 20, 0,  1e2, 0, "glue suck margin") \
+OPTION( refocusinittime,    60,  0,  1e5, 0, "refocus init time") \
+OPTION( refocusreluctant,    0,  0,  1, 0, "Luby refocus scheduling") \
 OPTION( refocusscale,   1e4,  1, 1e100, 0, "periodic refocusing scale") \
 OPTION( reluctant,      1024,  0,2e9, 0, "reluctant doubling period") \
 OPTION( reluctantmax,1048576,  0,2e9, 0, "reluctant doubling period") \

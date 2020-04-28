@@ -739,6 +739,7 @@ void Internal::analyze () {
   else learn_empty_clause ();
 
   if (stable) reluctant.tick (); // Reluctant has its own 'conflict' counter.
+  refocus_reluctant.tick();
 
   // Clean up.
   //

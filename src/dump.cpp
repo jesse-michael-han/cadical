@@ -74,7 +74,7 @@ void Internal::dump (bool dump_learned) {
   //         }
   //     };
 
-  int64_t CLAUSE_LIMIT = 5e6;
+  int64_t CLAUSE_LIMIT = opts.clauselim;
 
   int64_t REDUNDANT_LIMIT = opts.dumplim * (CLAUSE_LIMIT + 1); // used to be m_irr
 
@@ -134,7 +134,7 @@ void Internal::dump (bool dump_learned) {
   for (const auto & c : clauses)
     {
       int removed_count = 0;
-      if (push_count > CLAUSE_LIMIT) {return;}
+      if (push_count > CLAUSE_LIMIT) {goto limit_exceeded;}
       if (push_count > REDUNDANT_LIMIT) {break;};
       for (const auto &l : *c) // check if clause is satisfied or unsatisfied
         {
@@ -161,11 +161,12 @@ void Internal::dump (bool dump_learned) {
     }
 
   fprintf (dump_file, "p cnf %d %" PRId64 "\n", new_max_var, push_count);
-
   for (auto &idx : valid_indices)
     {
       dump_clause(clauses[idx], dump_file);
     }
+  
+  if (false) {limit_exceeded: fprintf (dump_file, "p cnf %d %" PRId64 "\n", new_max_var, CLAUSE_LIMIT+1); return;}
 
   // auto [body, mlen] = readFile(tmp_dump_file);
 

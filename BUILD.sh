@@ -1,1 +1,1 @@
-rm -rf build && mkdir build && cd build && cmake .. && cd .. && make -j4 -C build
+rm -rf build && mkdir build && cd build && cmake .. && cd .. && make -j64 -C build

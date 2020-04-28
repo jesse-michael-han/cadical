@@ -10,6 +10,7 @@ Internal::Internal ()
 :
   mode (SEARCH),
   refocused (false),
+  refocus_skip_level (0),
   dump_count (0),
   refocus_dump_count (0),
   unsat (false),
@@ -206,7 +207,7 @@ int Internal::cdcl_loop_with_inprocessing () {
     else if (compacting ()) compact ();      // collect variables
     else if (conditioning ()) condition ();  // globally blocked clauses
     else if (dumping ()) dump();
-    else if (refocusing ()) refocus_scores();         
+    else if (refocusing ()) refocus_scores();
     else
       { res = decide (); };                    // next decision
   }
@@ -410,6 +411,20 @@ void Internal::init_limits () {
     LOG ("limiting to %d local search rounds", lim.localsearch);
   }
 
+  if (lim.query <= 0) { // do not query at start
+    lim.query = lim.query + opts.queryinterval;
+  }
+
+  if (opts.refocusreluctant) {
+    refocus_reluctant.enable(opts.queryinterval, opts.reluctantmax);
+  }
+
+  if (lim.stabquery <= 0) {
+    lim.stabquery = lim.stabquery + opts.queryinterval;
+  }
+  if (lim.unstabquery <= 0) {
+    lim.unstabquery = lim.unstabquery + opts.queryinterval;
+  }
   /*----------------------------------------------------------------------*/
 
   lim.initialized = true;

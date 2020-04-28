@@ -51,16 +51,21 @@ bool Internal::stabilizing () {
 // restart conflict interval has passed and the fast moving average is above
 // a certain margin over the slow moving average then we restart.
 
+  bool Internal:: glue_sucks (int mgn)
+  {
+  double f = averages.current.glue.fast;
+  double margin = (100.0 + mgn)/100.0;
+  double s = averages.current.glue.slow, l = margin * s;
+  LOG ("EMA glue slow %.2f fast %.2f limit %.2f", s, f, l);
+  return l <= f;
+  }
+
 bool Internal::restarting () {
   if (!opts.restart) return false;
   if ((size_t) level < assumptions.size () + 2) return false;
   if (stabilizing ()) return reluctant;
   if (stats.conflicts <= lim.restart) return false;
-  double f = averages.current.glue.fast;
-  double margin = (100.0 + opts.restartmargin)/100.0;
-  double s = averages.current.glue.slow, l = margin * s;
-  LOG ("EMA glue slow %.2f fast %.2f limit %.2f", s, f, l);
-  return l <= f;
+  return glue_sucks(opts.restartmargin);
 }
 
 // This is Marijn's reuse trail idea.  Instead of always backtracking to the
@@ -104,6 +109,12 @@ void Internal::restart () {
 
   report ('R', 2);
   STOP (restart);
+
+  refocused = true;
+  
+  // // wait until refocusing is allowed, then only refocus immediately after a restart
+  // // too lazy to rename the flag but for now it means "just restarted so OK to refocus"  
+  // if (stats.conflicts > lim.query) refocused = true;
 }
 
 }

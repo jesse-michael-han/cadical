@@ -365,6 +365,8 @@ bool Internal::propagate () {
     else {
 
       if (stable) stats.stabconflicts++;
+      else stats.unstabconflicts++;
+      
       stats.conflicts++;
 
       LOG (conflict, "conflict");

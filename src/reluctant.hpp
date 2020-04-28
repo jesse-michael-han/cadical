@@ -37,6 +37,8 @@ public:
     else limited = true, limit = l;
   };
 
+  uint64_t get_countdown () {return countdown;}
+
   void disable () { period = 0, trigger = false; }
 
   // Increments the count until the 'period' is hit.  Then it performs the
