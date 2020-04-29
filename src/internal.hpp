@@ -526,6 +526,7 @@ struct Internal {
   int find_conflict_level (int & forced);
   int determine_actual_backtrack_level (int jump);
   void analyze ();
+  int analyze2 ();
   void iterate ();       // report learned unit clause
 
   // Use last learned clause to subsume some more.

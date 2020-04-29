@@ -666,6 +666,7 @@ private:
   friend class App;
   friend class Mobical;
   friend class Parser;
+  friend class SatEnv;
 
   // Read solution in competition format for debugging and testing.
   //

@@ -754,6 +754,177 @@ void Internal::analyze () {
     eagerly_subsume_recently_learned_clauses (driving_clause);
 }
 
+int Internal::analyze2 () {
+
+  START (analyze);
+
+  assert (conflict);
+
+  // First update moving averages of trail height at conflict.
+  //
+  UPDATE_AVERAGE (averages.current.trail.fast, trail.size ());
+  UPDATE_AVERAGE (averages.current.trail.slow, trail.size ());
+
+  /*----------------------------------------------------------------------*/
+
+  // if (opts.chrono) {
+
+  //   int forced;
+
+  //   const int conflict_level = find_conflict_level (forced);
+
+    // In principle we can perform conflict analysis as in non-chronological
+    // backtracking except if there is only one literal with the maximum
+    // assignment level in the clause.  Then standard conflict analysis is
+    // unnecessary and we can use the conflict as a driving clause.  In the
+    // pseudo code of the SAT'18 paper on chronological backtracking this
+    // corresponds to the situation handled in line 4-6 in Alg. 1, except
+    // that the pseudo code in the paper only backtracks while we eagerly
+    // assign the single literal on the highest decision level.
+
+  //   if (forced) {
+
+  //     assert (forced);
+  //     assert (conflict_level > 0);
+  //     LOG ("single highest level literal %d", forced);
+
+  //     // The pseudo code in the SAT'18 paper actually backtracks to the
+  //     // 'second highest decision' level, while their code backtracks
+  //     // to 'conflict_level-1', which is more in the spirit of chronological
+  //     // backtracking anyhow and thus we also do the latter.
+  //     //
+  //     backtrack (conflict_level - 1);
+
+  //     LOG ("forcing %d", forced);
+  //     search_assign_driving (forced, conflict);
+
+  //     conflict = 0;
+  //     STOP (analyze);
+  //     return;
+  //   }
+
+  //   // Backtracking to the conflict level is in the pseudo code in the
+  //   // SAT'18 chronological backtracking paper, but not in their actual
+  //   // implementation.  In principle we do not need to backtrack here.
+  //   // However, as a side effect of backtracking to the conflict level we
+  //   // set 'level' to the conflict level which then allows us to reuse the
+  //   // old 'analyze' code as is.  The alternative (which we also tried but
+  //   // then abandoned) is to use 'conflict_level' instead of 'level' in the
+  //   // analysis, which however requires to pass it to the 'analyze_reason'
+  //   // and 'analyze_literal' functions.
+  //   //
+  //   backtrack (conflict_level);
+  // }
+
+  // // Actual conflict on root level, thus formula unsatisfiable.
+  // //
+  // if (!level) {
+  //   learn_empty_clause ();
+  //   STOP (analyze);
+  //   return;
+  // }
+
+  /*----------------------------------------------------------------------*/
+
+  // First derive the 1st UIP clause by going over literals assigned on the
+  // current decision level.  Literals in the conflict are marked as 'seen'
+  // as well as all literals in reason clauses of already 'seen' literals on
+  // the current decision level.  Thus the outer loop starts with the
+  // conflict clause as 'reason' and then uses the 'reason' of the next
+  // seen literal on the trail assigned on the current decision level.
+  // During this process maintain the number 'open' of seen literals on the
+  // current decision level with not yet processed 'reason'.  As soon 'open'
+  // drops to one, we have found the first unique implication point.  This
+  // is sound because the topological order in which literals are processed
+  // follows the assignment order and a more complex algorithm to find
+  // articulation points is not necessary.
+  //
+  Clause * reason = conflict;
+  LOG (reason, "analyzing conflict");
+
+  assert (clause.empty ());
+
+  int i = trail.size ();        // Start at end-of-trail.
+  int open = 0;                 // Seen but not processed on this level.
+  int uip = 0;                  // The first UIP literal.
+
+  for (;;) {
+    analyze_reason (uip, reason, open);
+    uip = 0;
+    while (!uip) {
+      assert (i > 0);
+      const int lit = trail[--i];
+      if (!flags (lit).seen) continue;
+      if (var (lit).level == level) uip = lit;
+    }
+    if (!--open) break;
+    reason = var (uip).reason;
+    LOG (reason, "analyzing %d reason", uip);
+  }
+  LOG ("first UIP %d", uip);
+  clause.push_back (-uip);
+
+  // Update glue and learned (1st UIP literals) statistics.
+  //
+  int size = (int) clause.size ();
+  const int glue = (int) levels.size () - 1;
+  LOG (clause, "1st UIP size %d and glue %d clause", size, glue);
+  UPDATE_AVERAGE (averages.current.glue.fast, glue);
+  UPDATE_AVERAGE (averages.current.glue.slow, glue);
+  stats.learned.literals += size;
+  stats.learned.clauses++;
+  stats.avg_glue = ((stats.learned.clauses - 1) * stats.avg_glue + (double) glue)/((double) stats.learned.clauses);
+  assert (glue < size);
+
+  // Update decision heuristics.
+  //
+  if (opts.bump) bump_variables ();
+
+  // Minimize the 1st UIP clause as pioneered by Niklas Soerensson in
+  // MiniSAT and described in our joint SAT'09 paper.
+  //
+  if (size > 1) {
+    if (opts.minimize) minimize_clause ();
+    size = (int) clause.size ();
+  }
+
+  // Update actual size statistics.
+  //
+  stats.units    += (size == 1);
+  stats.binaries += (size == 2);
+  UPDATE_AVERAGE (averages.current.size, size);
+
+  // Determine back-jump level, learn driving clause, backtrack and assign
+  // flipped 1st UIP literal.
+  //
+  // int jump;
+  // Clause * driving_clause = new_driving_clause (glue, jump);
+  // UPDATE_AVERAGE (averages.current.jump, jump);
+
+  // int new_level = determine_actual_backtrack_level (jump);;
+  // UPDATE_AVERAGE (averages.current.level, new_level);
+  // backtrack (new_level);
+
+  // if (uip) search_assign_driving (-uip, driving_clause);
+  // else learn_empty_clause ();
+
+  // if (stable) reluctant.tick (); // Reluctant has its own 'conflict' counter.
+  // refocus_reluctant.tick();
+
+  // Clean up.
+  //
+  clear_analyzed_literals ();
+  clear_analyzed_levels ();
+  clause.clear ();
+  conflict = 0;
+
+  STOP (analyze);
+
+  // if (driving_clause && opts.eagersubsume)
+  //   eagerly_subsume_recently_learned_clauses (driving_clause);
+  return glue; // just return the LBD
+  }
+
 // We wait reporting a learned unit until propagation of that unit is
 // completed.  Otherwise the 'i' report gives the number of remaining
 // variables before propagating the unit (and hides the actual remaining
