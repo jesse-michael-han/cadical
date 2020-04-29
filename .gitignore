@@ -8,3 +8,6 @@ makefile
 /src/compile_commands.json
 /build2/
 /src/nohup.out
+/dist/
+/satenv.egg-info/
+/src/satenv.egg-info/
