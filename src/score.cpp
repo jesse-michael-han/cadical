@@ -1,5 +1,5 @@
 #include "internal.hpp"
-
+#include <iostream>
 namespace CaDiCaL {
 
 bool Internal::refocusing () {
@@ -131,68 +131,69 @@ void Internal::refocus_scores () {
   //   {
   //     V_logits = torch::rand(CL_idxs.n_vars).to(torch::kFloat32);
   //   }
-  try
-    {
-      auto V_logits = (!opts.randomrefocus) ? gnn1(CL_idxs) : torch::rand(CL_idxs.n_vars).to(torch::kFloat32);
-      // auto V_logits = gnn1(CL_idxs);
+  // try
+  //   {
+  //     auto V_logits = (!opts.randomrefocus) ? gnn1(CL_idxs) : torch::rand(CL_idxs.n_vars).to(torch::kFloat32);
+  //     // auto V_logits = gnn1(CL_idxs);
 
-      auto update_scores = [&]()
-                         {
-                           auto V_probs = torch::softmax(V_logits * 4.0, 0);
-                           // V_probs *= (1.0 - pow(((double) ((double) stats.conflicts / (double) (stats.decisions + 1))), 2.0));
+  //     auto update_scores = [&]()
+  //                        {
+  //                          auto V_probs = torch::softmax(V_logits * 4.0, 0);
+  //                          // V_probs *= (1.0 - pow(((double) ((double) stats.conflicts / (double) (stats.decisions + 1))), 2.0));
 
-                           for (unsigned v_idx = 0; v_idx < nv_to_v.size(); v_idx++)
-                             {
-                               auto idx = nv_to_v[v_idx] + 1;
-                               // score (idx) = opts.refocusscale * nv_to_v.size() * V_probs[v_idx].item<double>();
-                               score (idx) += scinc * opts.refocusscale * V_probs[v_idx].item<double>() * (1.0 - pow(((double) ((double) stats.conflicts / (double) (stats.decisions + 1))), 2.0));
-                               if (scores.contains (idx))
-                                 {
-                                   scores.update (idx);
-                                 }
-                             }
-                         };
+  //                          for (unsigned v_idx = 0; v_idx < nv_to_v.size(); v_idx++)
+  //                            {
+  //                              auto idx = nv_to_v[v_idx] + 1;
+  //                              // score (idx) = opts.refocusscale * nv_to_v.size() * V_probs[v_idx].item<double>();
+  //                              score (idx) += scinc * opts.refocusscale * V_probs[v_idx].item<double>() * (1.0 - pow(((double) ((double) stats.conflicts / (double) (stats.decisions + 1))), 2.0));
+  //                              if (scores.contains (idx))
+  //                                {
+  //                                  scores.update (idx);
+  //                                }
+  //                            }
+  //                        };
 
-      if (use_scores())
-        {
-          // if (opts.randomrefocus) V_logits = torch::rand(CL_idxs.n_vars).to(torch::kFloat32);
-          update_scores();
-        }
-      else // in unstable phase, so reorder the queue
-        {
-          // if (opts.randomrefocus) V_logits = torch::rand(CL_idxs.n_vars).to(torch::kFloat32);
-          // update_scores();
-          std::vector<std::pair<int, double>> updates;
-          // auto V_probs = torch::softmax(V_logits * 4.0, 0);
-          // V_logits = torch::rand(CL_idxs.n_vars).to(torch::kFloat32);
-          auto V_logits_size = V_logits.size(0);
-          double BUMP_FRAC = 0.75; // bump top (1-BUMP_FRAC) variables as scored by the network
-          std::vector<int> to_bump(V_logits_size);
-          std::iota (std::begin(to_bump), std::end(to_bump), 0);
-          std::sort(to_bump.begin(), to_bump.end(), [&](int x, int y) { return (V_logits[x]< V_logits[y]).item<bool>();});
-           for (auto it = to_bump.begin() + floor(BUMP_FRAC * V_logits_size); it < to_bump.end(); it++) {
-            bump_queue(nv_to_v[*it]+1);
-          }
-        }
+  //     if (use_scores())
+  //       {
+  //         // if (opts.randomrefocus) V_logits = torch::rand(CL_idxs.n_vars).to(torch::kFloat32);
+  //         update_scores();
+  //       }
+  //     else // in unstable phase, so reorder the queue
+  //       {
+  //         // if (opts.randomrefocus) V_logits = torch::rand(CL_idxs.n_vars).to(torch::kFloat32);
+  //         // update_scores();
+  //         std::vector<std::pair<int, double>> updates;
+  //         // auto V_probs = torch::softmax(V_logits * 4.0, 0);
+  //         // V_logits = torch::rand(CL_idxs.n_vars).to(torch::kFloat32);
+  //         auto V_logits_size = V_logits.size(0);
+  //         double BUMP_FRAC = 0.75; // bump top (1-BUMP_FRAC) variables as scored by the network
+  //         std::vector<int> to_bump(V_logits_size);
+  //         std::iota (std::begin(to_bump), std::end(to_bump), 0);
+  //         std::sort(to_bump.begin(), to_bump.end(), [&](int x, int y) { return (V_logits[x]< V_logits[y]).item<bool>();});
+  //          for (auto it = to_bump.begin() + floor(BUMP_FRAC * V_logits_size); it < to_bump.end(); it++) {
+  //           bump_queue(nv_to_v[*it]+1);
+  //         }
+  //       }
 
-      if (stable) { stats.stab_refocus_count++; }
-      else { stats.unstab_refocus_count++; }
+  //     if (stable) { stats.stab_refocus_count++; }
+  //     else { stats.unstab_refocus_count++; }
 
-      stats.refocus_count++;
+  //     stats.refocus_count++;
 
-      auto elapsed = process_time() - start;
+  //     auto elapsed = process_time() - start;
 
-      stats.total_refocus_time += elapsed;
-      // stats.avg_refocus_time = ((stats.refocus_count - 1) * stats.avg_refocus_time + elapsed)/(stats.refocus_count);
+  //     stats.total_refocus_time += elapsed;
+  //     // stats.avg_refocus_time = ((stats.refocus_count - 1) * stats.avg_refocus_time + elapsed)/(stats.refocus_count);
+  //     return;
+
+  //   }
+  // catch (std::runtime_error& e) // in case CUDA OOM error when running on GPU
+  //   {
+  //     std::cout << "CAUGHT RUNTIME ERROR\n"  << e.what() << "\n";
+  //     stats.oom_count++;
+  //     return;
+  //   }
       return;
-
-    }
-  catch (std::runtime_error& e) // in case CUDA OOM error when running on GPU
-    {
-      std::cout << "CAUGHT RUNTIME ERROR\n"  << e.what() << "\n";
-      stats.oom_count++;
-      return;
-    }
 };
 
 // Shuffle the EVSIDS heap.

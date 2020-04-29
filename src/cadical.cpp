@@ -4,7 +4,6 @@
 
 #include "internal.hpp"
 #include "signal.hpp"
-#include "ATen/Parallel.h"
 
 /*------------------------------------------------------------------------*/
 
@@ -218,7 +217,7 @@ do { solver->error (__VA_ARGS__); } while (0)
 /*------------------------------------------------------------------------*/
 
 int App::main (int argc, char ** argv) {
-  at::set_num_threads(1);
+  // at::set_num_threads(1);
   const char * proof_path = 0, * solution_path = 0, * dimacs_path = 0;
   const char * output_path = 0, * extension_path = 0, * config = 0;
   const char * dump_dir = 0;

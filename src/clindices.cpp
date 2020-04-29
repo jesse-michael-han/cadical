@@ -1,4 +1,5 @@
 #include "internal.hpp"
+#include <iostream>
 // #include "torch/nn/parallel/data_parallel.h" // don't include this, as it's unneeded -- rely on the user to supply GPU availability in form of opts.gpu flag
 
 namespace CaDiCaL
@@ -6,21 +7,22 @@ namespace CaDiCaL
 
   void GNN1::init_model(const char* model_path, int seed, bool use_gpu)
   {
-    torch::manual_seed(seed);
-    MODEL_PATH = std::string(model_path);
-    CUDA_FLAG = false;
-    // CUDA_FLAG = true;
-    // module.to(at::kCUDA);    
+    // torch::manual_seed(seed);
+    // MODEL_PATH = std::string(model_path);
+    // CUDA_FLAG = false;
+    // // CUDA_FLAG = true;
+    // // module.to(at::kCUDA);    
     
-    if (use_gpu)
-    {
-      CUDA_FLAG = true;
-      module = torch::jit::load(MODEL_PATH, torch::kCUDA);
-    }
-    else
-    {
-      module = torch::jit::load(MODEL_PATH);
-    }
+    // if (use_gpu)
+    // {
+    //   CUDA_FLAG = true;
+    //   module = torch::jit::load(MODEL_PATH, torch::kCUDA);
+    // }
+    // else
+    // {
+    //   module = torch::jit::load(MODEL_PATH);
+    // }
+    return;
   }
 
   // struct Clause_lt {
@@ -62,6 +64,8 @@ namespace CaDiCaL
   };
   std::tuple<CLIndices, std::vector<unsigned>> Internal::buildCLIndices()
   {
+
+    
     // simplify();
     int n_vars = max_var;
 
@@ -81,6 +85,7 @@ namespace CaDiCaL
     // for (int i = 0; i < trail_limit; ++i) {
     //   assigned[var(trail[i])] = true;
     // }
+
     for (auto l : trail) {
       // std::cout << "NEXT VARAIBLE INDEX ON TRAIL: " << var(trail[i]) << "\n";
       assigned[vidx(l)-1] = true;
@@ -238,32 +243,32 @@ namespace CaDiCaL
     return std::tuple<CLIndices, std::vector<unsigned>> {CL_idxs, nv_to_v};
   }
 
-  torch::Tensor GNN1::get_logits(CLIndices &CL_idxs) { // populates probs
-    long n_cells = CL_idxs.C_idxs.size();
-    auto C_indices = torch::from_blob(CL_idxs.C_idxs.data(), {n_cells}, torch::TensorOptions().dtype(torch::kInt32)).to(torch::kLong);
-    auto L_indices = torch::from_blob(CL_idxs.L_idxs.data(), {n_cells}, torch::TensorOptions().dtype(torch::kInt32)).to(torch::kLong);
-    auto indices = torch::stack({C_indices, L_indices})// .to(CUDA_FLAG ? torch::kCUDA : torch :: kCPU)
-      ;
+  // torch::Tensor GNN1::get_logits(CLIndices &CL_idxs) { // populates probs
+  //   long n_cells = CL_idxs.C_idxs.size();
+  //   auto C_indices = torch::from_blob(CL_idxs.C_idxs.data(), {n_cells}, torch::TensorOptions().dtype(torch::kInt32)).to(torch::kLong);
+  //   auto L_indices = torch::from_blob(CL_idxs.L_idxs.data(), {n_cells}, torch::TensorOptions().dtype(torch::kInt32)).to(torch::kLong);
+  //   auto indices = torch::stack({C_indices, L_indices})// .to(CUDA_FLAG ? torch::kCUDA : torch :: kCPU)
+  //     ;
 
-    auto values = torch::ones({n_cells}).to(torch::kFloat32)// .to(CUDA_FLAG ? torch::kCUDA : torch :: kCPU)
-      ;
-    int64_t n_clauses = CL_idxs.n_clauses;
-    int64_t n_lits = CL_idxs.n_vars * 2;
-    std::vector<int64_t> sizes = {n_clauses, n_lits};
+  //   auto values = torch::ones({n_cells}).to(torch::kFloat32)// .to(CUDA_FLAG ? torch::kCUDA : torch :: kCPU)
+  //     ;
+  //   int64_t n_clauses = CL_idxs.n_clauses;
+  //   int64_t n_lits = CL_idxs.n_vars * 2;
+  //   std::vector<int64_t> sizes = {n_clauses, n_lits};
  
-    auto G = at::sparse_coo_tensor(indices, values, sizes);
-    if (CUDA_FLAG)
-      {
-      G = G.to(torch::kCUDA);
-    }
-    std::vector<torch::jit::IValue> inputs = {G};
+  //   auto G = at::sparse_coo_tensor(indices, values, sizes);
+  //   if (CUDA_FLAG)
+  //     {
+  //     G = G.to(torch::kCUDA);
+  //   }
+  //   std::vector<torch::jit::IValue> inputs = {G};
     
-    // auto outputs = module.forward(inputs).toTuple();
-    // auto V_drat_logits = outputs -> elements()[0].toTensor().squeeze();
-    auto outputs = module.forward(inputs).toTensor();
-    return outputs.squeeze();
+  //   // auto outputs = module.forward(inputs).toTuple();
+  //   // auto V_drat_logits = outputs -> elements()[0].toTensor().squeeze();
+  //   auto outputs = module.forward(inputs).toTensor();
+  //   return outputs.squeeze();
 
-    // V_drat_logits = V_drat_logits.view({1, V_drat_logits.size(0)});
-    // auto V_core_logits = outputs[1];
-  }
+  //   // V_drat_logits = V_drat_logits.view({1, V_drat_logits.size(0)});
+  //   // auto V_core_logits = outputs[1];
+  // }
 }
