@@ -2,6 +2,10 @@
 
 namespace CaDiCaL {
 
+double Internal::glr ()  {
+  return ((double) ((double) stats.conflicts / (double) (stats.decisions + 1)));
+}
+
 bool Internal::refocusing () {
   if (stable)
     {
@@ -19,7 +23,7 @@ bool Internal::refocusing () {
         (opts.refocusreluctant ? refocus_reluctant : (stats.conflicts > lim.query)) &&
         // refocused &&
         (opts.refocusgluesucks ? glue_sucks(opts.refocusgluesucksmargin) : true) &&
-        (process_time() > opts.refocusinittime); 
+        (process_time() > opts.refocusinittime);
       // return false;
     }
 
@@ -133,8 +137,16 @@ void Internal::refocus_scores () {
   //   }
   try
     {
-      auto V_logits = (!opts.randomrefocus) ? gnn1(CL_idxs) : torch::rand(CL_idxs.n_vars).to(torch::kFloat32);
-      // auto V_logits = gnn1(CL_idxs);
+      torch::Tensor V_logits;
+      if (opts.randomrefocus) {
+        V_logits = gnn1(CL_idxs);
+        V_logits = torch::rand(CL_idxs.n_vars).to(torch::kFloat32);        
+      }
+      else {
+        V_logits = gnn1(CL_idxs);
+      }
+
+      // auto V_logits = (!opts.randomrefocus) ? gnn1(CL_idxs) : torch::rand(CL_idxs.n_vars).to(torch::
 
       auto update_scores = [&]()
                          {
@@ -145,12 +157,15 @@ void Internal::refocus_scores () {
                              {
                                auto idx = nv_to_v[v_idx] + 1;
                                // score (idx) = opts.refocusscale * nv_to_v.size() * V_probs[v_idx].item<double>();
-                               score (idx) += scinc * opts.refocusscale * V_probs[v_idx].item<double>() * (1.0 - pow(((double) ((double) stats.conflicts / (double) (stats.decisions + 1))), 2.0));
+                               // score (idx) += scinc * opts.refocusscale * V_probs[v_idx].item<double>() * (1.0 - pow(((double) ((double) stats.conflicts / (double) (stats.decisions + 1))), 2.0)); 
+                               if (opts.refocusrebump) score (idx) += scinc * opts.refocusscale * V_probs[v_idx].item<double>() * (0.25 + 0.75 * glr());
+                               else score (idx) = opts.refocusscale * nv_to_v.size() * V_probs[v_idx].item<double>();
                                if (scores.contains (idx))
                                  {
                                    scores.update (idx);
                                  }
                              }
+                           // scinc = 1.0; // reset score increment to 1 if we're refocusing and not rebumping
                          };
 
       if (use_scores())

@@ -126,18 +126,10 @@ namespace CaDiCaL
                              }
                              else if (clause.redundant) {
                                  LEARNED_FLAG = true;
-                                 // if ((double) clause.glue > averages.current.glue.slow) return;
+                                 if ((double) clause.glue > averages.current.glue.slow) return;
                                  // if (!clause.keep) return;
-                                 if (clause.glue > 5) return;
+                                 // if (clause.glue > 5) return;
                                }
-                             // else if (clause.redundant) {
-                             //   return;
-                             // }
-
-                             // else if (satisfied(clause)) {
-                             //   return;
-                             // }
-
                              else {
                                std::vector<int> tmp_c_idx;
                                std::vector<int> tmp_l_idx;

@@ -556,6 +556,7 @@ struct Internal {
   char rephase_walk ();
   std::tuple<CLIndices, std::vector<unsigned>> buildCLIndices ();
   void shuffle_scores ();
+  double glr ();  
   void refocus_scores ();
   void refocus_queue ();
   bool refocusing ();
