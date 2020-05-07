@@ -131,11 +131,12 @@ void Internal::dump (bool dump_learned) {
 
   unsigned count = 0;
   int64_t push_count = 0;
+  bool LEARNED_FLAG = false;
   for (const auto & c : clauses)
     {
       int removed_count = 0;
-      if (push_count > CLAUSE_LIMIT) {goto limit_exceeded;}
-      if (push_count > REDUNDANT_LIMIT) {break;};
+      if ((!LEARNED_FLAG) && push_count > CLAUSE_LIMIT) {goto limit_exceeded;}
+      if (LEARNED_FLAG && push_count > REDUNDANT_LIMIT) {break;};
       for (const auto &l : *c) // check if clause is satisfied or unsatisfied
         {
           auto v_idx = vidx(l) - 1;
@@ -157,6 +158,7 @@ void Internal::dump (bool dump_learned) {
         {
           if (!c -> garbage && !c->redundant) {valid_indices.push_back(count); push_count++;}
         }
+      if (c->redundant) LEARNED_FLAG = true;
     case_sat: count++;
     }
 
@@ -166,7 +168,7 @@ void Internal::dump (bool dump_learned) {
       dump_clause(clauses[idx], dump_file);
     }
   
-  if (false) {limit_exceeded: fprintf (dump_file, "p cnf %d %" PRId64 "\n", new_max_var, CLAUSE_LIMIT+1); return;}
+  if (false) {limit_exceeded: fprintf (dump_file, "p cnf %d %" PRId64 "\n", new_max_var, (int64_t) 0); return;}
 
   // auto [body, mlen] = readFile(tmp_dump_file);
 

@@ -12,7 +12,7 @@ bool Internal::refocusing () {
   return opts.refocus &&
          // stats.stabconflicts > lim.stabquery &&
     (opts.refocusreluctant ? refocus_reluctant : (stats.conflicts > lim.query)) &&
-    refocused &&
+    (opts.refocusrestart ? refocused : true) &&
     (opts.refocusgluesucks ? glue_sucks(opts.refocusgluesucksmargin) : true) &&
     (process_time() > opts.refocusinittime);
     }
@@ -22,6 +22,7 @@ bool Internal::refocusing () {
         // stats.unstabconflicts > lim.unstabquery &&
         (opts.refocusreluctant ? refocus_reluctant : (stats.conflicts > lim.query)) &&
         // refocused &&
+        (opts.refocusrestart ? refocused : true) &&
         (opts.refocusgluesucks ? glue_sucks(opts.refocusgluesucksmargin) : true) &&
         (process_time() > opts.refocusinittime);
       // return false;
@@ -137,27 +138,34 @@ void Internal::refocus_scores () {
   //   }
   try
     {
-      torch::Tensor V_logits;
-      if (opts.randomrefocus) {
-        V_logits = gnn1(CL_idxs);
-        V_logits = torch::rand(CL_idxs.n_vars).to(torch::kFloat32);        
-      }
-      else {
-        V_logits = gnn1(CL_idxs);
-      }
+      // torch::Tensor V_logits;
+      // if (opts.randomrefocus) {
+      //   V_logits = gnn1(CL_idxs);
+      //   V_logits = torch::rand(CL_idxs.n_vars).to(torch::kFloat32);
+      // }
+      // else {
+      //   V_logits = gnn1(CL_idxs);
+      // }
+      auto V_logits = gnn1(CL_idxs);
 
       // auto V_logits = (!opts.randomrefocus) ? gnn1(CL_idxs) : torch::rand(CL_idxs.n_vars).to(torch::
 
-      auto update_scores = [&]()
+      auto update_scores = [&](torch::Tensor &v)
                          {
-                           auto V_probs = torch::softmax(V_logits * 4.0, 0);
+                           auto V_probs = torch::softmax(v * 4.0, 0);
+
+                           if (gnn1.CUDA_FLAG) V_probs = V_probs.to(torch::kCPU);
+                           // printf("%f", V_probs[0].item<double>()); // ensure that forward pass is computed for fair comparison
                            // V_probs *= (1.0 - pow(((double) ((double) stats.conflicts / (double) (stats.decisions + 1))), 2.0));
+                           if (opts.randomrefocus) {
+                             V_probs = torch::softmax(torch::rand(CL_idxs.n_vars).to(torch::kFloat32) * 4.0, 0);
+                           }
 
                            for (unsigned v_idx = 0; v_idx < nv_to_v.size(); v_idx++)
                              {
                                auto idx = nv_to_v[v_idx] + 1;
                                // score (idx) = opts.refocusscale * nv_to_v.size() * V_probs[v_idx].item<double>();
-                               // score (idx) += scinc * opts.refocusscale * V_probs[v_idx].item<double>() * (1.0 - pow(((double) ((double) stats.conflicts / (double) (stats.decisions + 1))), 2.0)); 
+                               // score (idx) += scinc * opts.refocusscale * V_probs[v_idx].item<double>() * (1.0 - pow(((double) ((double) stats.conflicts / (double) (stats.decisions + 1))), 2.0));
                                if (opts.refocusrebump) score (idx) += scinc * opts.refocusscale * V_probs[v_idx].item<double>() * (0.25 + 0.75 * glr());
                                else score (idx) = opts.refocusscale * nv_to_v.size() * V_probs[v_idx].item<double>();
                                if (scores.contains (idx))
@@ -168,11 +176,7 @@ void Internal::refocus_scores () {
                            // scinc = 1.0; // reset score increment to 1 if we're refocusing and not rebumping
                          };
 
-      if (use_scores())
-        {
-          // if (opts.randomrefocus) V_logits = torch::rand(CL_idxs.n_vars).to(torch::kFloat32);
-          update_scores();
-        }
+      if (use_scores()) update_scores(V_logits);
       else // in unstable phase, so reorder the queue
         {
           // if (opts.randomrefocus) V_logits = torch::rand(CL_idxs.n_vars).to(torch::kFloat32);

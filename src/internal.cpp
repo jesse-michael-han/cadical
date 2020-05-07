@@ -206,7 +206,7 @@ int Internal::cdcl_loop_with_inprocessing () {
     else if (eliminating ()) elim ();        // variable elimination
     else if (compacting ()) compact ();      // collect variables
     else if (conditioning ()) condition ();  // globally blocked clauses
-    else if (dumping ()) dump();
+    else if (dumping ()) dump ();
     else if (refocusing ()) refocus_scores();
     else
       { res = decide (); };                    // next decision

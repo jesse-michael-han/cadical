@@ -134,8 +134,9 @@ OPTION( refocusdecayexp,    1,  0,  1000, 0, "refocus decay exponent") \
 OPTION( refocusgluesucks,    0,  0,  1, 0, "refocus if glue sucks") \
 OPTION( refocusgluesucksmargin, 20, 0,  1e2, 0, "glue suck margin") \
 OPTION( refocusinittime,    60,  0,  1e5, 0, "refocus init time") \
-OPTION( refocusrebump,    0,  0,  1, 0, "Luby refocus scheduling") \
+OPTION( refocusrebump,    0,  0,  1, 0, "rebumping") \
 OPTION( refocusreluctant,    0,  0,  1, 0, "Luby refocus scheduling") \
+OPTION( refocusrestart,    0,  0,  1, 0, "wait until restart to refocus") \
 OPTION( refocusscale,   1e4,  1, 1e100, 0, "periodic refocusing scale") \
 OPTION( reluctant,      1024,  0,2e9, 0, "reluctant doubling period") \
 OPTION( reluctantmax,1048576,  0,2e9, 0, "reluctant doubling period") \
