@@ -11,7 +11,7 @@ namespace CaDiCaL
     buffer[length] = '\0';
     fread(buffer, 1, length, f);
     fclose(f);
-    return std::pair(buffer, length+1);
+    return std::pair<char*, long>(buffer, length+1);
 }
 
 bool Internal::dumping ()  {

@@ -555,7 +555,7 @@ struct Internal {
   char rephase_original ();
   char rephase_random ();
   char rephase_walk ();
-  std::tuple<CLIndices, std::vector<unsigned>> buildCLIndices ();
+  std::pair<CLIndices, std::vector<unsigned>> buildCLIndices ();
   void shuffle_scores ();
   void refocus_scores ();
   void refocus_queue ();

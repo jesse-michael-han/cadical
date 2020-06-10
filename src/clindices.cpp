@@ -62,7 +62,8 @@ namespace CaDiCaL
       fprintf(f, "%d %d\n", C_idxs[i], L_idxs[i]);
     }
   };
-  std::tuple<CLIndices, std::vector<unsigned>> Internal::buildCLIndices()
+  
+  std::pair<CLIndices, std::vector<unsigned>> Internal::buildCLIndices()
   {
 
     
@@ -240,7 +241,7 @@ namespace CaDiCaL
     // printf("THE BIGGEST CLAUSE: %d\n", c_idx + c_idx2);
 
     CL_idxs.set_n_clauses(n_clauses);
-    return std::tuple<CLIndices, std::vector<unsigned>> {CL_idxs, nv_to_v};
+    return {CL_idxs, nv_to_v};
   }
 
   // torch::Tensor GNN1::get_logits(CLIndices &CL_idxs) { // populates probs

@@ -11,7 +11,7 @@ namespace CaDiCaL
       auto y = 2;
       auto err = solver->read_dimacs (path, x, y);
       if (err) {
-        throw std::runtime_error("parsing failed");
+        throw std::runtime_error(err);
       }
       init_dimacs_flag = true;
       return err;
@@ -39,7 +39,9 @@ namespace CaDiCaL
 
   CLIndices SatEnv::render () {
     if (is_terminal) { return CLIndices (); }
-    auto [CL_idxs, new_nv_to_v] = solver->internal->buildCLIndices();
+    auto foo = solver->internal->buildCLIndices();
+    auto CL_idxs = std::get<0>(foo);
+    auto new_nv_to_v = std::get<1>(foo);
     nv_to_v = new_nv_to_v;
     return CL_idxs;
   }
@@ -50,7 +52,8 @@ namespace CaDiCaL
     int l_in = sign(l_ex) * (nv_to_v[abs(l_ex) - 1] + 1);
     solver->internal->search_assume_decision(l_in);
     bool status_after_propagation = solver->internal->propagate();
-    if (!status_after_propagation) { reward = 4.0 * 1/pow(solver->internal->analyze2(), 2.0); is_terminal = true; }
+    if (!status_after_propagation) { reward = 1/(max(pow(solver->internal->analyze2(), 2.0), 1.0)); is_terminal = true; }
+    else { if (solver->internal->satisfied()) is_terminal = true; }
     // auto num_clauses = solver->internal->clauses.size();
     // bool NO_LEARNED_FLAG = solver->internal->clauses.size() == num_clauses;
     // if (!NO_LEARNED_FLAG) throw std::runtime_error("learned a clause, uh-oh");
