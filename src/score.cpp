@@ -167,7 +167,7 @@ void Internal::refocus_scores () {
                                // score (idx) = opts.refocusscale * nv_to_v.size() * V_probs[v_idx].item<double>();
                                // score (idx) += scinc * opts.refocusscale * V_probs[v_idx].item<double>() * (1.0 - pow(((double) ((double) stats.conflicts / (double) (stats.decisions + 1))), 2.0));
                                if (opts.refocusrebump) score (idx) += scinc * opts.refocusscale * V_probs[v_idx].item<double>() * (0.25 + 0.75 * glr());
-                               else score (idx) = opts.refocusscale * nv_to_v.size() * V_probs[v_idx].item<double>();
+                               else score (idx) = scinc * opts.refocusscale * nv_to_v.size() * V_probs[v_idx].item<double>();
                                if (scores.contains (idx))
                                  {
                                    scores.update (idx);

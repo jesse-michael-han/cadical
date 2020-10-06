@@ -43,7 +43,7 @@ list(REMOVE_ITEM cadical_source_files "src/mobical.cpp")
 add_library(cadical_lib ${cadical_source_files})
 target_link_libraries(cadical_lib "${TORCH_LIBRARIES}")
 target_link_libraries(cadical_lib "${ZLIB_LIBRARY}")
-target_link_libraries(cadical_lib -Wl,--no-as-needed "$ENV{HOME}/org/projects/neuro-minisat/torchscript/build/libmy_ops.so")
+# target_link_libraries(cadical_lib -Wl,--no-as-needed "$ENV{HOME}/org/projects/neuro-minisat/torchscript/build/libmy_ops.so")
 target_link_libraries(cadical_lib OpenMP::OpenMP_CXX)
 
 add_executable(cadical src/cadical.cpp)
