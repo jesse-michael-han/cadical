@@ -6,6 +6,12 @@
 
 namespace CaDiCaL
 {
+  struct StepResult {
+    CLIndices obs;
+    double reward;
+    bool is_terminal;
+  };
+  
   class SatEnv
   {
     bool init_dimacs_flag = false;
@@ -13,7 +19,7 @@ namespace CaDiCaL
     Solver* solver;
   public:
     CLIndices render (); // this sets nv_to_v
-    std::tuple<CLIndices, double, bool> step (int l_ex); // this uses nv_to_v to translate external, simpified literal l_ex
+    StepResult step (int l_ex); // this uses nv_to_v to translate external, simpified literal l_ex
     void reset ();
     bool is_terminal = false;
     const char * init_dimacs(const char* path);
@@ -39,6 +45,12 @@ PYBIND11_MODULE(satenv, m){
                               .def_readwrite("n_clauses", &CaDiCaL::CLIndices::n_clauses)
                               .def_readwrite("C_idxs", &CaDiCaL::CLIndices::C_idxs)
                               .def_readwrite("L_idxs", &CaDiCaL::CLIndices::L_idxs);
+
+                            py::class_<CaDiCaL::StepResult>(m, "StepResult")
+                              .def(py::init())
+                              .def_readonly("obs", &CaDiCaL::StepResult::obs)
+                              .def_readonly("reward", &CaDiCaL::StepResult::reward)
+                              .def_readonly("is_terminal", &CaDiCaL::StepResult::is_terminal);
 
 #ifdef VERSION_INFO
     m.attr("__version__") = VERSION_INFO;

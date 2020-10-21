@@ -46,7 +46,7 @@ namespace CaDiCaL
     return CL_idxs;
   }
 
-  std::tuple<CLIndices, double, bool> SatEnv::step (int l_ex) {
+  StepResult SatEnv::step (int l_ex) {
     if (is_terminal) throw std::runtime_error("environment state is terminal, cannot assign variable");
     double reward = - 1.0/(solver->internal->max_var);
     int l_in = sign(l_ex) * (nv_to_v[abs(l_ex) - 1] + 1);
@@ -57,7 +57,8 @@ namespace CaDiCaL
     // auto num_clauses = solver->internal->clauses.size();
     // bool NO_LEARNED_FLAG = solver->internal->clauses.size() == num_clauses;
     // if (!NO_LEARNED_FLAG) throw std::runtime_error("learned a clause, uh-oh");
-    return {render(), reward, is_terminal};
+    StepResult result = {render(), reward, is_terminal};
+    return result;
   }
 
   void SatEnv::reset () {
